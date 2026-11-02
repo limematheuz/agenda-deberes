@@ -1,0 +1,14 @@
+/* Filtros guardados en el dispositivo del estudiante. */
+.tabs-wrap { position: relative; display: inline-flex; }
+.tabs { display: inline-flex; gap: 2px; max-width: 100%; overflow-x: auto; padding: 3px; border: 1px solid rgba(16,24,40,.14); border-radius: 11px; background: #f5f5f7; scrollbar-width: none; box-shadow: inset 0 1px rgba(255,255,255,.88), 0 1px 2px rgba(16,24,40,.05); }
+.tabs button { min-height: 34px; padding: 7px 13px; border-radius: 8px; color: #767680; font-weight: 650; white-space: nowrap; }
+.tabs button:hover { color: var(--g900); }
+.tabs button.on { background: #fff; color: #1d1d1f; box-shadow: 0 1px 3px rgba(0,0,0,.14), inset 0 1px rgba(255,255,255,.86); }
+.tabs .tabs-edit { margin-left: 2px; padding-inline: 10px; color: var(--g500); font-size: 11px; }.tabs .tabs-edit:hover { background: rgba(16,24,40,.07); }
+.tabs-editor { position: absolute; z-index: 12; top: calc(100% + 8px); left: 0; width: min(360px, calc(100vw - 28px)); padding: 14px; border: 1px solid var(--g200); border-radius: 13px; background: rgba(255,255,255,.98); color: var(--g900); box-shadow: 0 16px 32px rgba(16,24,40,.16); }
+.tabs-editor header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }.tabs-editor header button { width: 26px; height: 26px; border-radius: 7px; color: var(--g500); font-size: 20px; line-height: 1; }.tabs-editor header button:hover { background: var(--g100); }
+.tabs-editor p { margin: 0 0 11px; color: var(--g500); font-size: 12px; }
+.tabs-editor label { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 7px; padding: 4px 0; }.tabs-editor input[type=checkbox] { width: 15px; height: 15px; }.tabs-editor label input:not([type=checkbox]) { height: 32px; }
+.tabs-reset { margin-top: 8px; color: var(--g500); font-size: 12px; font-weight: 650; }.tabs-reset:hover { color: var(--g900); text-decoration: underline; }
+:root[data-theme="oscuro"] .tabs-editor { border-color: rgba(255,255,255,.14); background: #2b2b30; color: #f5f5f7; box-shadow: 0 18px 38px rgba(0,0,0,.42); }:root[data-theme="oscuro"] .tabs-editor input:not([type=checkbox]) { border-color: rgba(255,255,255,.16); background: #36363b; color: #f5f5f7; }
+@media (max-width: 959px) { .tabs-wrap, .tabs { width: 100%; } }

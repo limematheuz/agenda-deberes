@@ -1,0 +1,19 @@
+/* Estilos propios de MonthView. Tokens y base viven en styles/. */
+.wkh { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; border-top: 1px solid var(--g200); border-bottom: 1px solid var(--g200); padding: 10px 0; font-size: 12px; font-weight: 600; color: var(--g500); }
+.mgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cell { min-height: clamp(64px, 11vw, 124px); padding: 6px; border-right: 1px solid var(--g200); border-bottom: 1px solid var(--g200); display: flex; flex-direction: column; gap: 4px; cursor: pointer; min-width: 0; }
+.cell:nth-child(7n) { border-right: 0; }
+.cell.empty { background: var(--g50); cursor: default; }
+.cell:not(.empty):hover { background: var(--g25); }
+.cell.drag-over { background: rgba(91, 109, 227, .1); box-shadow: inset 0 0 0 2px rgba(91, 109, 227, .42); }
+.num { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 600; color: var(--g700); }
+.cell.today .num { background: var(--g950); color: #fff; }
+.pills { display: grid; gap: 3px; }
+.cell em { font-size: 11px; color: var(--g500); font-style: normal; padding-left: 4px; }
+.dots { display: none; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: auto; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; }
+@media (max-width: 720px) {
+  .pills, .cell em { display: none; }
+  .dots { display: flex; }
+  .cell { padding: 4px; align-items: center; min-height: 54px; }
+}

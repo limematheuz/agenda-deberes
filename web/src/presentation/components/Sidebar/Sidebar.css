@@ -1,0 +1,33 @@
+/* Estilos propios de Sidebar. Tokens y base viven en styles/. */
+.sidebar { display: flex; flex-direction: column; gap: 3px; padding: 18px 14px 12px; min-width: 0; position: sticky; top: 18px; height: calc(100dvh - 36px); overflow-y: auto; border: 1px solid rgba(39,39,42,.13); border-radius: 22px; color: #4b4b50; background: rgba(255,255,255,.38); box-shadow: 0 16px 40px rgba(60,48,37,.09), inset 0 1px rgba(255,255,255,.7); backdrop-filter: blur(28px) saturate(1.1); transition: padding .2s ease, background .28s ease; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 15px; letter-spacing: -.025em; padding: 4px 8px 25px; color: #202024; }
+.logo { width: 30px; height: 30px; flex: none; display: grid; place-items: center; overflow: hidden; border-radius: 9px; box-shadow: 0 2px 6px rgba(43,57,189,.24), inset 0 1px rgba(255,255,255,.38); }
+.logo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.more { margin-left: auto; color: var(--g500); letter-spacing: 1px; padding: 6px; }
+.primary-nav { display: grid; gap: 3px; }
+.nav-item, .sub { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 39px; padding: 8px 12px; border-radius: 8px; color: #59595f; font-weight: 560; text-align: left; }
+.nav-item:hover, .sub:hover { background: rgba(35,35,39,.1); color: #202024; box-shadow: inset 0 1px rgba(255,255,255,.72); }
+.nav-item svg, .sub svg { flex: none; }
+.nav-item.on, .sub.on { background: rgba(54,54,57,.11); color: #202024; box-shadow: inset 0 1px rgba(255,255,255,.45); }
+.group-title { margin: 7px 0 4px; padding: 4px 12px; color: #98989e; font-size: 10px; letter-spacing: .08em; font-weight: 750; }
+.subject-group { margin-top: 14px; }
+.sub { padding-left: 16px; font-weight: 500; color: #59595f; }
+.sub-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.count { color: #99999e; font-variant-numeric: tabular-nums; font-size: 13px; }
+.dot-gap { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
+.spacer { flex: 1; }
+.sidebar.collapsed { padding-inline: 10px; overflow: visible; }
+.sidebar.collapsed .brand { padding-inline: 5px; position: relative; }
+.sidebar.collapsed .side-label, .sidebar.collapsed .group-title, .sidebar.collapsed .sub-name, .sidebar.collapsed .count, .sidebar.collapsed .dot, .sidebar.collapsed .dot-gap, .sidebar.collapsed hr { display: none; }
+.sidebar.collapsed .nav-item { justify-content: center; padding-inline: 8px; }
+.sidebar.collapsed .sub { display: none; }
+.sidebar.collapsed .more { position: absolute; left: 37px; top: 3px; margin: 0; }
+.sidebar.collapsed .nav-item[data-tooltip]::after { content: attr(data-tooltip); position: absolute; z-index: 20; left: calc(100% + 10px); top: 50%; transform: translateY(-50%) translateX(-4px); pointer-events: none; opacity: 0; padding: 6px 9px; border: 1px solid rgba(255,255,255,.12); border-radius: 7px; background: #27272b; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.2); font-size: 12px; font-weight: 650; white-space: nowrap; transition: opacity .14s ease, transform .14s ease; }
+.sidebar.collapsed .nav-item[data-tooltip]:hover::after, .sidebar.collapsed .nav-item[data-tooltip]:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+.draggable-subject { cursor: grab; }
+.draggable-subject:active { cursor: grabbing; }
+.drag-handle { width: 12px; color: #a2a2aa; letter-spacing: -5px; font-size: 15px; line-height: 1; transform: rotate(90deg); }
+.draggable-subject:hover .drag-handle { color: #5f65c9; }
+@media (max-width: 959px) {
+  .sidebar { display: none; }
+}

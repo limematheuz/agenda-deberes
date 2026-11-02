@@ -1,0 +1,2 @@
+/* Estilos propios de AuthForm. Tokens y base viven en styles/. */
+.auth { display: grid; gap: 12px; }

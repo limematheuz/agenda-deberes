@@ -1,0 +1,8 @@
+/* Lista de elementos compartida (DayPanel y SubjectsManager). */
+.list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 6px 10px 12px; border: 1px solid var(--g200); border-left: 3px solid var(--c, var(--g300)); border-radius: 10px; }
+.item input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.item.done .titulo { text-decoration: line-through; color: var(--g500); }
+.body { flex: 1; min-width: 0; display: grid; gap: 4px; align-items: center; }
+.titulo { color: var(--g900); font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+.add { display: grid; gap: 10px; }

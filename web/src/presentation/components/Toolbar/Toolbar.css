@@ -1,0 +1,7 @@
+/* Estilos propios de Toolbar. Tokens y base viven en styles/. */
+.toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin: 20px 0 22px; }
+.mfilter { display: none; }
+@media (max-width: 959px) {
+  .mfilter { display: block; width: 100%; }
+  .toolbar { align-items: stretch; }
+}

@@ -1,0 +1,13 @@
+/* Tokens de diseño (variables y niveles de urgencia). */
+:root {
+  --g25: #fcfcfd; --g50: #f9fafb; --g100: #f2f4f7; --g200: #eaecf0; --g300: #d0d5dd; --g400: #98a2b3; --g500: #667085; --g600: #475467; --g700: #344054; --g900: #101828; --g950: #0c111d;
+  --danger: #d92d20; --xs: 0 1px 2px rgba(16, 24, 40, .05);
+  color-scheme: light;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.u-ninguna, .u-baja { --uc: #98a2b3; }
+.u-media { --uc: #b54708; }
+.u-alta { --uc: #c4320a; }
+.u-critica { --uc: #d92d20; }
+.u-hoy { --uc: #b42318; }
+.u-vencida { --uc: #912018; }

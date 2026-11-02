@@ -1,0 +1,10 @@
+/* Estilos propios de SearchBox. Tokens y base viven en styles/. */
+.search { display: flex; align-items: center; gap: 8px; width: min(100%, 320px); height: 44px; padding: 0 12px; border: 1px solid rgba(16,24,40,.16); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: 0 1px 2px rgba(16,24,40,.05), inset 0 1px rgba(255,255,255,.7); color: var(--g500); }
+.search:focus-within { border-color: var(--g400); box-shadow: 0 0 0 4px rgba(152, 162, 179, .2); }
+.search input { border: 0; box-shadow: none; height: 100%; padding: 0; flex: 1; min-width: 0; background: none; }
+.search input:focus { box-shadow: none; }
+kbd { font: 500 12px Inter, sans-serif; border: 1px solid var(--g200); border-radius: 6px; padding: 1px 6px; color: var(--g500); }
+@media (max-width: 959px) {
+  .search kbd { display: none; }
+  .search { width: 100%; }
+}
