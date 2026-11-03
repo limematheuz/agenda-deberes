@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { TIPOS, tipoLabel, type Asignatura, type ISODate, type NuevaTarea, type Tarea, type TareaEditable, type TipoTarea } from "../../../domain/entities";
 import { describeDays, urgencyOf } from "../../../domain/urgency";
 import { colorVar } from "../../colors";
-import { fromISO } from "../../../domain/dates";
+import { fromISO, monthGrid } from "../../../domain/dates";
 import { Icon } from "../Icon/Icon";
 import "../../styles/list.css";
 import "./DayPanel.css";
@@ -18,6 +18,25 @@ interface Props {
   asignaturaInicial?: string | null;
 }
 
+function TaskDatePicker({ value, onChange }: { value: ISODate; onChange: (fecha: ISODate) => void }) {
+  const fecha = fromISO(value);
+  const [abierto, setAbierto] = useState(false);
+  const [mes, setMes] = useState(() => new Date(fecha.getFullYear(), fecha.getMonth(), 1));
+  useEffect(() => setMes(new Date(fecha.getFullYear(), fecha.getMonth(), 1)), [value]);
+  const anterior = (): void => setMes((actual) => new Date(actual.getFullYear(), actual.getMonth() - 1, 1));
+  const siguiente = (): void => setMes((actual) => new Date(actual.getFullYear(), actual.getMonth() + 1, 1));
+  const elegir = (dia: ISODate): void => { onChange(dia); setAbierto(false); };
+  const etiqueta = fecha.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+  return <div className="task-date-picker">
+    <button type="button" className="task-date-trigger" onClick={() => setAbierto((v) => !v)} aria-label="Fecha" aria-expanded={abierto}><Icon name="calendar" size={15} /><span>{etiqueta}</span><Icon name="chevron-right" size={14} /></button>
+    {abierto && <div className="task-date-popover" role="dialog" aria-label="Elegir fecha">
+      <header><button type="button" aria-label="Mes anterior" onClick={anterior}><Icon name="chevron-left" size={15} /></button><strong>{mes.toLocaleDateString("es-ES", { month: "long", year: "numeric" })}</strong><button type="button" aria-label="Mes siguiente" onClick={siguiente}><Icon name="chevron-right" size={15} /></button></header>
+      <div className="task-date-weekdays" aria-hidden="true">{["L", "M", "X", "J", "V", "S", "D"].map((dia) => <span key={dia}>{dia}</span>)}</div>
+      <div className="task-date-days">{monthGrid(mes.getFullYear(), mes.getMonth()).map((dia, indice) => dia ? <button key={dia} type="button" className={dia === value ? "selected" : ""} onClick={() => elegir(dia)}>{Number(dia.slice(8))}</button> : <span key={`empty-${indice}`} />)}</div>
+    </div>}
+  </div>;
+}
+
 export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate, onRemove, asignaturaInicial = null }: Props) {
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<TipoTarea>("ejercicio");
@@ -29,6 +48,9 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
   const [horaSeleccionada = "", minutoSeleccionado = "00"] = hora.split(":");
   const cambiarHora = (nuevaHora: string): void => setHora(nuevaHora ? `${nuevaHora}:${minutoSeleccionado}` : "");
   const cambiarMinuto = (nuevoMinuto: string): void => setHora(horaSeleccionada ? `${horaSeleccionada}:${nuevoMinuto}` : "");
+  const [horaEdicion = "", minutoEdicion = "00"] = (edicion?.hora ?? "").split(":");
+  const cambiarHoraEdicion = (nuevaHora: string): void => setEdicion((actual) => actual ? { ...actual, hora: nuevaHora ? `${nuevaHora}:${minutoEdicion}` : null } : actual);
+  const cambiarMinutoEdicion = (nuevoMinuto: string): void => setEdicion((actual) => actual && horaEdicion ? { ...actual, hora: `${horaEdicion}:${nuevoMinuto}` } : actual);
 
   const submit = (e: FormEvent): void => {
     e.preventDefault();
@@ -61,7 +83,8 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
                 <div className="task-edit body">
                   <input aria-label="Título" value={edicion.titulo} onChange={(e) => setEdicion({ ...edicion, titulo: e.target.value })} autoFocus />
                   <div className="task-edit-grid">
-                    <input type="date" aria-label="Fecha" value={edicion.fecha} onChange={(e) => setEdicion({ ...edicion, fecha: e.target.value })} />
+                    <TaskDatePicker value={edicion.fecha} onChange={(nuevaFecha) => setEdicion({ ...edicion, fecha: nuevaFecha })} />
+                    <div className="task-edit-time"><select aria-label="Hora de la tarea" value={horaEdicion} onChange={(e) => cambiarHoraEdicion(e.target.value)}><option value="">Hora</option>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select><span>:</span><select aria-label="Minutos de la tarea" value={minutoEdicion} disabled={!horaEdicion} onChange={(e) => cambiarMinutoEdicion(e.target.value)}>{["00", "15", "30", "45"].map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select></div>
                     <select aria-label="Tipo" value={edicion.tipo} onChange={(e) => setEdicion({ ...edicion, tipo: e.target.value as TipoTarea })}>{TIPOS.map((opcion) => <option key={opcion.value} value={opcion.value}>{opcion.label}</option>)}</select>
                     <select aria-label="Asignatura" value={edicion.asignaturaId ?? ""} onChange={(e) => setEdicion({ ...edicion, asignaturaId: e.target.value || null })}><option value="">Sin asignatura</option>{asignaturas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.nombre}</option>)}</select>
                   </div>
@@ -83,7 +106,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
           );
         })}
       </ul>
-      <form className="add" onSubmit={submit}>
+      {!edicion && <form className="add" onSubmit={submit}>
         <input placeholder="¿Qué hay que hacer?" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
         <div className="row">
           <div className="time-selects" aria-label="Hora opcional"><select className="native-select" value={horaSeleccionada} onChange={(e) => cambiarHora(e.target.value)} aria-label="Hora"><option value="">Hora</option>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => <option key={h} value={h}>{h}</option>)}</select><span>:</span><select className="native-select" value={minutoSeleccionado} onChange={(e) => cambiarMinuto(e.target.value)} disabled={!horaSeleccionada} aria-label="Minutos">{["00", "15", "30", "45"].map((m) => <option key={m} value={m}>{m}</option>)}</select></div>
@@ -96,7 +119,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
           </select>
         </div>
         <button type="submit" className="primary">Añadir deber</button>
-      </form>
+      </form>}
       {confirmarBorrado && <div className="confirm-delete" role="alertdialog" aria-modal="true" aria-labelledby="delete-title"><div className="confirm-delete-card"><h3 id="delete-title">¿Eliminar deber?</h3><p>Vas a borrar “{confirmarBorrado.titulo}”. Esta acción no se puede deshacer.</p><div><button type="button" className="task-action" onClick={() => setConfirmarBorrado(null)}>Cancelar</button><button type="button" className="task-action remove" onClick={() => { void onRemove(confirmarBorrado.id); setConfirmarBorrado(null); }}>Eliminar deber</button></div></div></div>}
     </div>
   );

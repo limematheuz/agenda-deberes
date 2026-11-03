@@ -1,19 +1,17 @@
 // Reglas puras (sin red ni base de datos). Misma escala que web/src/domain/urgency.ts.
-// Cuanto más cerca la fecha, más avisos: media 1 vez · alta 1/día · crítica y hoy 2/día · vencida 1/día.
+// 4–7 días: aviso naranja una vez · 2–3 días: rojo diario · hoy/mañana: rojo dos veces.
 import { diasHasta } from "./tiempo.ts";
 import type { Candidata, Mensaje, Nivel, Slot, Tarea } from "./types.ts";
 
 const ORDEN: readonly Nivel[] = ["media", "alta", "critica", "hoy", "vencida"];
 const SLOTS: Record<Nivel, readonly Slot[]> = { media: ["am"], alta: ["am"], critica: ["am", "pm"], hoy: ["am", "pm"], vencida: ["am"] };
 
-/** Los exámenes escalan 2 días antes. */
-export function nivelDe(tipo: string, dias: number): Nivel | null {
-  const extra = tipo === "examen" ? 2 : 0;
+export function nivelDe(_tipo: string, dias: number): Nivel | null {
   if (dias < 0) return "vencida";
   if (dias === 0) return "hoy";
-  if (dias <= 1 + extra) return "critica";
-  if (dias <= 3 + extra) return "alta";
-  if (dias <= 7 + extra) return "media";
+  if (dias <= 1) return "critica";
+  if (dias <= 3) return "alta";
+  if (dias <= 7) return "media";
   return null;
 }
 

@@ -5,9 +5,9 @@ export type Database = {
   public: {
     Tables: {
       asignaturas: {
-        Row: { id: string; user_id: string; nombre: string; color: string; created_at: string };
-        Insert: { id?: string; user_id?: string; nombre: string; color?: string; created_at?: string };
-        Update: { id?: string; user_id?: string; nombre?: string; color?: string; created_at?: string };
+        Row: { id: string; user_id: string; nombre: string; color: string; orden: number; created_at: string };
+        Insert: { id?: string; user_id?: string; nombre: string; color?: string; orden?: number; created_at?: string };
+        Update: { id?: string; user_id?: string; nombre?: string; color?: string; orden?: number; created_at?: string };
         Relationships: [];
       };
       tareas: {

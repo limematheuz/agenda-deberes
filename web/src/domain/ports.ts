@@ -14,6 +14,7 @@ export interface AsignaturasRepository {
   list(): Promise<Asignatura[]>;
   create(n: NuevaAsignatura): Promise<Asignatura>;
   remove(id: string): Promise<void>;
+  reorder(ids: readonly string[]): Promise<void>;
 }
 export interface AuthGateway {
   haySesion(): Promise<boolean>;

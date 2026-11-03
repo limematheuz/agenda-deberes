@@ -13,13 +13,14 @@ interface Props {
   onSeccion: (seccion: "resumen" | "buscar" | "calendario") => void;
   contraida: boolean;
   onAlternar: () => void;
+  onReorder: (origen: string, destino: string) => void;
 }
 
-export function Sidebar({ asignaturas, tareas, activa, onElegir, onGestionar, onSalir, seccion, onSeccion, contraida, onAlternar }: Props) {
+export function Sidebar({ asignaturas, tareas, activa, onElegir, onGestionar, onSalir, seccion, onSeccion, contraida, onAlternar, onReorder }: Props) {
   const pendientes = tareas.filter((t) => !t.hecha);
   const cuenta = (id: string | null): number => pendientes.filter((t) => t.asignaturaId === id).length;
   const fila = (id: string, nombre: string, n: number, color?: string) => (
-    <button key={id} className={`sub${activa === id ? " on" : ""}${color ? " draggable-subject" : ""}`} onClick={() => onElegir(id)} draggable={Boolean(color)} title={color ? `Arrastra ${nombre} a un día para crear un deber` : undefined} onDragStart={(e) => { if (color) { e.dataTransfer.setData("application/x-agenda-subject", id); e.dataTransfer.effectAllowed = "copy"; } }}>
+    <button key={id} className={`sub${activa === id ? " on" : ""}${color ? " draggable-subject" : ""}`} onClick={() => onElegir(id)} draggable={Boolean(color)} title={color ? `Arrastra ${nombre} a un día para crear un deber` : undefined} onDragStart={(e) => { if (color) { e.dataTransfer.setData("application/x-agenda-subject", id); e.dataTransfer.effectAllowed = "copyMove"; } }} onDragOver={(e) => { if (color) e.preventDefault(); }} onDrop={(e) => { if (!color) return; e.preventDefault(); const origen = e.dataTransfer.getData("application/x-agenda-subject"); if (origen && origen !== id) onReorder(origen, id); }}>
       {color && <span className="drag-handle" aria-hidden="true">⠿</span>}
       {color ? <i className="dot" style={{ background: color }} /> : <span className="dot-gap" />}
       <span className="sub-name">{nombre}</span>

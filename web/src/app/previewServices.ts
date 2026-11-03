@@ -4,10 +4,10 @@ import type { Services } from "../domain/ports";
 
 /** Datos efímeros para revisar el diseño con ?preview=1 en desarrollo. */
 let asignaturas: Asignatura[] = [
-  { id: "mat", nombre: "Matemáticas", color: "#4f8bd6" },
-  { id: "his", nombre: "Historia", color: "#af5a92" },
-  { id: "ing", nombre: "Inglés", color: "#487bdb" },
-  { id: "bio", nombre: "Biología", color: "#3b9a73" },
+  { id: "mat", nombre: "Matemáticas", color: "#4f8bd6", orden: 0 },
+  { id: "his", nombre: "Historia", color: "#af5a92", orden: 1 },
+  { id: "ing", nombre: "Inglés", color: "#487bdb", orden: 2 },
+  { id: "bio", nombre: "Biología", color: "#3b9a73", orden: 3 },
 ];
 const hoy = todayISO();
 let tareas: Tarea[] = [
@@ -34,11 +34,12 @@ export const previewServices: Services = {
   asignaturas: {
     list: async () => asignaturas,
     create: async (n: NuevaAsignatura) => {
-      const a = { ...n, id: crypto.randomUUID() };
+      const a = { ...n, id: crypto.randomUUID(), orden: asignaturas.length };
       asignaturas = [...asignaturas, a];
       return a;
     },
     remove: async (id) => { asignaturas = asignaturas.filter((a) => a.id !== id); },
+    reorder: async (ids) => { const porId = new Map(asignaturas.map((a) => [a.id, a])); asignaturas = ids.map((id, orden) => ({ ...porId.get(id)!, orden })); },
   },
   auth: { haySesion: async () => true, onChange: () => () => undefined, signIn: async () => undefined, signUp: async () => true, signOut: async () => undefined },
   push: { estado: async () => "no-soportado", activar: async () => "no-soportado" },

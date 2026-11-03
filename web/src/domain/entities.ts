@@ -9,7 +9,7 @@ export const TIPOS: ReadonlyArray<{ value: TipoTarea; label: string }> = [
 ];
 export const tipoLabel = (t: TipoTarea): string => TIPOS.find((x) => x.value === t)?.label ?? t;
 
-export interface Asignatura { id: string; nombre: string; color: string }
+export interface Asignatura { id: string; nombre: string; color: string; orden: number }
 export interface Tarea {
   id: string;
   titulo: string;
@@ -21,4 +21,4 @@ export interface Tarea {
 }
 export type NuevaTarea = Omit<Tarea, "id" | "hecha">;
 export type TareaEditable = Pick<Tarea, "titulo" | "tipo" | "fecha" | "hora" | "asignaturaId">;
-export type NuevaAsignatura = Omit<Asignatura, "id">;
+export type NuevaAsignatura = Omit<Asignatura, "id" | "orden">;

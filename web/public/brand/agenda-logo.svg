@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
-  <rect x="5" y="5" width="86" height="86" rx="25" fill="#1D1D1F"/>
-  <path d="M27 25.5c0-5.25 4.25-9.5 9.5-9.5h23c5.25 0 9.5 4.25 9.5 9.5V71c0 5.52-4.48 10-10 10H37c-5.52 0-10-4.48-10-10V25.5Z" fill="#F5F5F7"/>
-  <path d="M27 34h42" stroke="#C7C7CC" stroke-width="5"/>
-  <path d="M37 22v8M59 22v8" stroke="#F5F5F7" stroke-width="5" stroke-linecap="round"/>
-  <path d="m37.5 56 7.2 7.2L59.5 48.5" stroke="#1D1D1F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Versión vectorial monocroma del icono Agenda: calendario, hoja y check. -->
+  <rect x="57" y="98" width="398" height="358" rx="86" fill="#111113"/>
+  <path d="M57 193c0-52 42-94 94-94h210c52 0 94 42 94 94v37H57v-37Z" fill="#050506"/>
+  <rect x="126" y="48" width="72" height="150" rx="36" fill="#f5f5f7"/><rect x="314" y="48" width="72" height="150" rx="36" fill="#f5f5f7"/>
+  <path d="M150 184h212c35 0 63 28 63 63v91c0 41-33 74-74 74H161c-41 0-74-33-74-74v-91c0-35 28-63 63-63Z" fill="#fff" stroke="#fff" stroke-width="5"/>
+  <rect x="139" y="213" width="58" height="58" rx="20" fill="#111113"/>
+  <path d="m178 323 55 55 111-123" stroke="#111113" stroke-width="43" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M354 410c38-6 67-39 71-79v10c0 39-32 71-71 71v-2Z" fill="#fff"/>
 </svg>

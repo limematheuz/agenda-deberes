@@ -9,11 +9,14 @@
 .num { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 600; color: var(--g700); }
 .cell.today .num { background: var(--g950); color: #fff; }
 .pills { display: grid; gap: 3px; }
+.month-task { min-width: 0; cursor: grab; }.month-task:active { cursor: grabbing; }
 .cell em { font-size: 11px; color: var(--g500); font-style: normal; padding-left: 4px; }
 .dots { display: none; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: auto; }
 .dots i { width: 7px; height: 7px; border-radius: 50%; }
 @media (max-width: 720px) {
   .pills, .cell em { display: none; }
   .dots { display: flex; }
-  .cell { padding: 4px; align-items: center; min-height: 54px; }
+  .wkh { padding: 13px 0 9px; font-size: 11px; }
+  .cell { padding: 5px 3px; align-items: center; min-height: 54px; }
+  .num { width: 29px; height: 29px; font-size: 13px; }
 }

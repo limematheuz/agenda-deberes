@@ -5,9 +5,9 @@
   color-scheme: light;
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
-.u-ninguna, .u-baja { --uc: #98a2b3; }
-.u-media { --uc: #b54708; }
-.u-alta { --uc: #c4320a; }
-.u-critica { --uc: #d92d20; }
-.u-hoy { --uc: #b42318; }
-.u-vencida { --uc: #912018; }
+.u-ninguna { --uc: #98a2b3; }
+/* Información, aviso y acción: misma semántica en tarjeta, banner y badge. */
+.u-baja { --uc: #007aff; }
+.u-media { --uc: #ff9500; }
+.u-alta, .u-critica, .u-hoy { --uc: #ff3b30; }
+.u-vencida { --uc: #d70015; }

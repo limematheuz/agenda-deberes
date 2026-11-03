@@ -11,6 +11,8 @@ const PATHS = {
   clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 6v6l4 2",
   pencil: "M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z",
   trash: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v5M14 11v5",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  sliders: "M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6",
   "chevron-left": "m15 18-6-6 6-6",
   "chevron-right": "m9 18 6-6-6-6",
 } as const satisfies Record<string, string>;

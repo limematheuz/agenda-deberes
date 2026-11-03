@@ -13,11 +13,12 @@ interface Props {
   onSelectDay: (d: ISODate) => void;
   onToggle: (t: Tarea) => void;
   onDropSubject: (d: ISODate, asignaturaId: string) => void;
+  onMoveTask: (id: string, fecha: ISODate) => void;
 }
 
 const SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onToggle, onDropSubject }: Props) {
+export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onToggle, onDropSubject, onMoveTask }: Props) {
   const porDia = useMemo(() => agruparPorDia(tareas), [tareas]);
   const hoy = todayISO();
   const [sobre, setSobre] = useState<ISODate | null>(null);
@@ -41,11 +42,11 @@ export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onTog
               onDragOver={(e) => e.preventDefault()}
               onDragEnter={(e) => { e.preventDefault(); setSobre(d); }}
               onDragLeave={() => setSobre((actual) => actual === d ? null : actual)}
-              onDrop={(e) => { e.preventDefault(); setSobre(null); const id = e.dataTransfer.getData("application/x-agenda-subject"); if (id) onDropSubject(d, id); }}
+              onDrop={(e) => { e.preventDefault(); setSobre(null); const asignaturaId = e.dataTransfer.getData("application/x-agenda-subject"); const tareaId = e.dataTransfer.getData("application/x-agenda-task"); if (asignaturaId) onDropSubject(d, asignaturaId); if (tareaId) onMoveTask(tareaId, d); }}
             >
               <span className="num">{Number(d.slice(8))}</span>
               <div className="pills">
-                {ts.slice(0, 3).map((t) => <TareaPill key={t.id} tarea={t} color={color(t)} detalle={t.hora?.slice(0, 5)} onToggle={onToggle} compacto />)}
+                {ts.slice(0, 3).map((t) => <div key={t.id} className="month-task" draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("application/x-agenda-task", t.id); e.dataTransfer.effectAllowed = "move"; }} onClick={(e) => { e.stopPropagation(); onSelectDay(d); }}><TareaPill tarea={t} color={color(t)} detalle={t.hora?.slice(0, 5)} onToggle={onToggle} compacto /></div>)}
               </div>
               {ts.length > 3 && <em>+{ts.length - 3} más</em>}
               <div className="dots" aria-hidden="true">

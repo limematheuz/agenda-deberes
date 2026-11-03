@@ -19,8 +19,20 @@ export function useAsignaturas() {
     error,
     add: (n: NuevaAsignatura) => run(async () => {
       const a = await repo.create(n);
-      setAsignaturas((p) => [...p, a].sort((x, y) => x.nombre.localeCompare(y.nombre)));
+      const siguiente = [...asignaturas, a].map((asignatura, orden) => ({ ...asignatura, orden }));
+      await repo.reorder(siguiente.map((asignatura) => asignatura.id));
+      setAsignaturas(siguiente);
     }),
     remove: (id: string) => run(async () => { await repo.remove(id); setAsignaturas((p) => p.filter((x) => x.id !== id)); }),
+    reorder: (ids: readonly string[]) => {
+      const anterior = asignaturas;
+      const porId = new Map(asignaturas.map((asignatura) => [asignatura.id, asignatura]));
+      const siguiente = ids.map((id, orden) => ({ ...porId.get(id)!, orden })).filter(Boolean);
+      setAsignaturas(siguiente);
+      void run(async () => {
+        try { await repo.reorder(ids); }
+        catch (e) { setAsignaturas(anterior); throw e; }
+      });
+    },
   };
 }

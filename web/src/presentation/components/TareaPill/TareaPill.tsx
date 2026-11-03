@@ -1,5 +1,5 @@
 import type { Tarea } from "../../../domain/entities";
-import { describeDays, rank, urgencyOf } from "../../../domain/urgency";
+import { describeDays, urgencyOf } from "../../../domain/urgency";
 import { colorVar } from "../../colors";
 import "./TareaPill.css";
 
@@ -22,7 +22,7 @@ export function TareaPill({ tarea: t, color, detalle, onToggle, compacto = false
         <strong>{t.titulo}</strong>
         {detalle && <small>{detalle}</small>}
       </span>
-      {rank(u) >= rank("alta") && <i className="udot" title={describeDays(t.fecha)} />}
+      {u !== "ninguna" && <i className="udot" title={describeDays(t.fecha)} />}
     </div>
   );
 }

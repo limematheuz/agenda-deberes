@@ -21,9 +21,9 @@ supabase/functions/enviar-avisos/
 brew install supabase/tap/supabase
 supabase login
 supabase link --project-ref TU-REF
-supabase db push                       # aplica supabase/migrations (0001, 0002 y 0003)
+supabase db push                       # aplica supabase/migrations (0001 a 0004)
 ```
-En Authentication, Providers, Email, para probar rápido desactiva "Confirm email".
+En **Authentication → Providers → Email**, deja activado **Confirm email** para que Supabase mande un enlace de verificación y solo se active una cuenta cuyo correo haya sido confirmado. En **URL Configuration**, configura el `Site URL` y añade las URLs locales y de Vercel a las redirecciones permitidas.
 
 ## 2. Claves de avisos (VAPID) y función
 ```bash

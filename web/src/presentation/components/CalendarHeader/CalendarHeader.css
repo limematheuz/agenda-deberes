@@ -12,7 +12,13 @@
 .pager button:hover { background: var(--g50); }
 .viewsel { width: auto; font-weight: 600; color: var(--g700); border-color: rgba(16,24,40,.16); background: #fff; }
 @media (max-width: 720px) {
-  .calhead { padding: 14px; }
-  .calctl { width: 100%; }
-  .calctl .primary { flex: 1; }
+  .calhead { gap: 14px; padding: 16px 14px 14px; }
+  .heading { width: 100%; gap: 12px; }
+  .heading h2 { font-size: 20px; }
+  .range { font-size: 12px; }
+  .badge { width: 54px; }
+  .calctl { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; }
+  .calctl .viewsel { grid-column: 1; grid-row: 1; width: 100%; min-width: 0; }
+  .calctl .primary { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; padding-inline: 8px; }
+  .calctl .pager { grid-column: 1 / -1; grid-row: 2; width: 100%; }.pager button { flex: 1; padding-inline: 10px; }
 }
