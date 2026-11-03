@@ -13,6 +13,7 @@
 .cell em { font-size: 11px; color: var(--g500); font-style: normal; padding-left: 4px; }
 .dots { display: none; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: auto; }
 .dots i { width: 7px; height: 7px; border-radius: 50%; }
+.app:not(.dark) .wkh, .app:not(.dark) .cell { border-color: rgba(71, 84, 103, .18); }.app:not(.dark) .cell.empty { background: rgba(71, 84, 103, .035); }
 @media (max-width: 720px) {
   .pills, .cell em { display: none; }
   .dots { display: flex; }

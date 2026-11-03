@@ -1,5 +1,5 @@
 export type ISODate = string; // YYYY-MM-DD
-export type TipoTarea = "ejercicio" | "examen" | "practica" | "otro";
+export type TipoTarea = string;
 
 export const TIPOS: ReadonlyArray<{ value: TipoTarea; label: string }> = [
   { value: "ejercicio", label: "Ejercicios" },

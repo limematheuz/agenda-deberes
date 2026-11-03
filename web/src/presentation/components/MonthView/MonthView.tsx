@@ -46,9 +46,8 @@ export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onTog
             >
               <span className="num">{Number(d.slice(8))}</span>
               <div className="pills">
-                {ts.slice(0, 3).map((t) => <div key={t.id} className="month-task" draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("application/x-agenda-task", t.id); e.dataTransfer.effectAllowed = "move"; }} onClick={(e) => { e.stopPropagation(); onSelectDay(d); }}><TareaPill tarea={t} color={color(t)} detalle={t.hora?.slice(0, 5)} onToggle={onToggle} compacto /></div>)}
+                {ts.map((t) => <div key={t.id} className="month-task" draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("application/x-agenda-task", t.id); e.dataTransfer.effectAllowed = "move"; }} onClick={(e) => { e.stopPropagation(); onSelectDay(d); }}><TareaPill tarea={t} color={color(t)} detalle={t.hora?.slice(0, 5)} onToggle={onToggle} compacto /></div>)}
               </div>
-              {ts.length > 3 && <em>+{ts.length - 3} más</em>}
               <div className="dots" aria-hidden="true">
                 {ts.filter((t) => !t.hecha).slice(0, 4).map((t) => <i key={t.id} style={{ background: color(t) ?? "#667085" }} />)}
               </div>

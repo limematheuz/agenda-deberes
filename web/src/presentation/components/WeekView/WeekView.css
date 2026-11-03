@@ -1,6 +1,6 @@
 /* Estilos propios de WeekView. Tokens y base viven en styles/. */
 .whead b.today { background: var(--g950); color: #fff; }
-.week-calendar { display: grid; grid-template-columns: 76px minmax(0, 1fr); }
+.week-calendar { min-width: 0; }.week-scroll { display: grid; grid-template-columns: 76px minmax(0, 1fr); max-height: min(72dvh, 930px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .mobile-week-days { display: none; }
 .time-axis { color: var(--g500); font-size: 11px; font-weight: 600; text-align: right; border-right: 1px solid rgba(16,24,40,.09); }
 .time-axis-head { height: 48px; border-bottom: 1px solid rgba(16,24,40,.1); }
@@ -11,12 +11,12 @@
 .wcol:last-child { border-right: 0; }
 .whead { display: flex; gap: 6px; justify-content: center; align-items: center; padding: 11px 0; border-bottom: 1px solid rgba(16,24,40,.1); font-size: 12px; font-weight: 650; color: var(--g500); }
 .whead b { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; color: var(--g700); }
-.wbody { display: grid; grid-template-rows: repeat(20, 27px); grid-auto-rows: 27px; gap: 0; align-content: start; padding: 0 8px 10px; min-height: 550px; cursor: pointer; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, rgba(16,24,40,.075) 53px, transparent 54px); background-size: 100% 54px; }
+.wbody { position: relative; display: grid; grid-template-rows: repeat(36, 27px); grid-auto-rows: 27px; gap: 0; align-content: start; padding: 0 8px 10px; min-height: 982px; cursor: pointer; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, rgba(16,24,40,.11) 53px, transparent 54px); background-size: 100% 54px; }
 .wbody.drag-over { background-color: rgba(91, 109, 227, .09); box-shadow: inset 0 0 0 2px rgba(91, 109, 227, .38); }
-.scheduled-task { z-index: 1; width: 100%; min-width: 0; overflow: hidden; padding-top: 7px; cursor: grab; }.scheduled-task:active { cursor: grabbing; }.scheduled-task:has(.pill):hover .pill { transform: translateY(-1px); }
+.scheduled-task { z-index: 1; width: 100%; min-width: 0; overflow: hidden; padding-top: 7px; cursor: grab; }.scheduled-task:active { cursor: grabbing; }.scheduled-task:has(.pill):hover .pill { transform: translateY(-1px); }.now-line { position: absolute; z-index: 3; right: 0; left: 0; height: 2px; pointer-events: none; background: #ff453a; box-shadow: 0 1px 3px rgba(255,69,58,.42); }.now-line i { position: absolute; top: -4px; left: -4px; width: 9px; height: 9px; border-radius: 50%; background: #ff453a; }
 .scheduled-task .pill { width: 100%; max-width: 100%; }
 @media (max-width: 720px) {
-  .week-calendar { grid-template-columns: 64px minmax(0, 1fr); }
+  .week-scroll { grid-template-columns: 64px minmax(0, 1fr); max-height: min(65dvh, 780px); }
   .mobile-week-days { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--g200); }
   .mobile-week-days button { display: grid; justify-items: center; gap: 3px; min-height: 67px; padding: 8px 1px; color: var(--g500); font-size: 11px; font-weight: 650; text-transform: capitalize; }
   .mobile-week-days button.on { color: var(--g900); background: var(--g25); }.mobile-week-days b { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; font-size: 13px; }.mobile-week-days b.today { background: var(--g950); color: #fff; }
@@ -27,6 +27,6 @@
   .wcol { display: none; border-right: 0; }
   .wcol.mobile-active, .day-calendar .wcol { display: block; }
   .whead { display: none; }
-  .wbody { grid-template-rows: repeat(20, 27px); grid-auto-rows: 27px; min-height: 550px; padding: 0 8px 10px; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, rgba(16,24,40,.075) 53px, transparent 54px); }
+  .wbody { grid-template-rows: repeat(36, 27px); grid-auto-rows: 27px; min-height: 982px; padding: 0 8px 10px; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, rgba(16,24,40,.075) 53px, transparent 54px); }
   .scheduled-task { grid-row: auto; padding-top: 7px; }
 }

@@ -19,14 +19,15 @@ export function UrgencyBanner({ tareas, estado, onSelect }: Props) {
   const gruposBase: ReadonlyArray<{ nivel: Urgency; titulo: (n: number) => string; tareas: readonly Tarea[] }> = [
     { nivel: "alta", titulo: (n: number) => n === 1 ? "1 entrega prioritaria" : `${n} entregas prioritarias`, tareas: ordenadas.filter((t) => rank(urgencyOf(t)) >= rank("alta")) },
     { nivel: "media", titulo: (n: number) => n === 1 ? "1 entrega esta semana" : `${n} entregas esta semana`, tareas: ordenadas.filter((t) => urgencyOf(t) === "media") },
-    { nivel: "baja", titulo: (n: number) => n === 1 ? "1 tarea planificada" : `${n} tareas planificadas`, tareas: ordenadas.filter((t) => urgencyOf(t) === "baja") },
   ];
   const grupos = gruposBase.filter((grupo) => grupo.tareas.length > 0);
   if (!grupos.length && !AYUDA[estado]) return null;
 
   return (
     <div className="urgency-stack" aria-live="polite">
-      {grupos.map((grupo) => <section key={grupo.nivel} className={`banner u-${grupo.nivel}`}><strong>{grupo.titulo(grupo.tareas.length)}</strong><ul>{grupo.tareas.slice(0, 3).map((t) => <li key={t.id}><button className="ghost" onClick={() => onSelect(t.fecha)}>{t.titulo}</button><span>{describeDays(t.fecha)}</span></li>)}</ul></section>)}
+      {grupos.map((grupo) => grupo.nivel === "baja"
+        ? <section key={grupo.nivel} className="banner u-baja planned-summary"><strong>{grupo.titulo(grupo.tareas.length)}</strong><div className="planned-items">{grupo.tareas.slice(0, 2).map((t) => <button key={t.id} onClick={() => onSelect(t.fecha)}><span>{t.titulo}</span><small>{describeDays(t.fecha)}</small></button>)}{grupo.tareas.length > 2 && <span className="planned-more">+{grupo.tareas.length - 2}</span>}</div></section>
+        : <section key={grupo.nivel} className={`banner u-${grupo.nivel}`}><strong>{grupo.titulo(grupo.tareas.length)}</strong><ul>{grupo.tareas.slice(0, 3).map((t) => <li key={t.id}><button className="ghost" onClick={() => onSelect(t.fecha)}>{t.titulo}</button><span>{describeDays(t.fecha)}</span></li>)}</ul></section>)}
       {AYUDA[estado] && <section className="banner u-baja"><span>{AYUDA[estado]}</span></section>}
     </div>
   );

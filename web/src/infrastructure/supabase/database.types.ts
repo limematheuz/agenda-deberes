@@ -1,4 +1,3 @@
-import type { TipoTarea } from "../../domain/entities";
 
 // Refleja supabase/migrations/0001_init.sql. Se puede regenerar con `supabase gen types typescript`.
 export type Database = {
@@ -11,9 +10,9 @@ export type Database = {
         Relationships: [];
       };
       tareas: {
-        Row: { id: string; user_id: string; asignatura_id: string | null; titulo: string; tipo: TipoTarea; fecha: string; hora: string | null; hecha: boolean; created_at: string };
-        Insert: { id?: string; user_id?: string; asignatura_id?: string | null; titulo: string; tipo?: TipoTarea; fecha: string; hora?: string | null; hecha?: boolean; created_at?: string };
-        Update: { id?: string; user_id?: string; asignatura_id?: string | null; titulo?: string; tipo?: TipoTarea; fecha?: string; hora?: string | null; hecha?: boolean; created_at?: string };
+        Row: { id: string; user_id: string; asignatura_id: string | null; titulo: string; tipo: string; fecha: string; hora: string | null; hecha: boolean; created_at: string };
+        Insert: { id?: string; user_id?: string; asignatura_id?: string | null; titulo: string; tipo?: string; fecha: string; hora?: string | null; hecha?: boolean; created_at?: string };
+        Update: { id?: string; user_id?: string; asignatura_id?: string | null; titulo?: string; tipo?: string; fecha?: string; hora?: string | null; hecha?: boolean; created_at?: string };
         Relationships: [];
       };
       push_subscriptions: {
@@ -25,7 +24,7 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: { tipo_tarea: TipoTarea };
+    Enums: { tipo_tarea: string };
     CompositeTypes: Record<string, never>;
   };
 };

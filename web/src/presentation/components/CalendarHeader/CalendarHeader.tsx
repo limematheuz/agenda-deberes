@@ -39,7 +39,7 @@ export function CalendarHeader({ titulo, inicio, fin, vista, onVista, onMover, o
           <option value="semana">Vista semana</option>
           <option value="dia">Vista día</option>
         </select>
-        <button className="primary" onClick={onAnadir}><Icon name="plus" />Añadir deber</button>
+        <button className="primary" onClick={onAnadir}><Icon name="plus" />Crear</button>
       </div>
     </header>
   );

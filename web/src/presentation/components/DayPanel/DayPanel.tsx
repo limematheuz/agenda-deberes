@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { TIPOS, tipoLabel, type Asignatura, type ISODate, type NuevaTarea, type Tarea, type TareaEditable, type TipoTarea } from "../../../domain/entities";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { tipoLabel, type Asignatura, type ISODate, type NuevaTarea, type Tarea, type TareaEditable, type TipoTarea } from "../../../domain/entities";
+import { tiposPersonalizados } from "../Tabs/Tabs";
 import { describeDays, urgencyOf } from "../../../domain/urgency";
 import { colorVar } from "../../colors";
 import { fromISO, monthGrid } from "../../../domain/dates";
@@ -38,8 +39,9 @@ function TaskDatePicker({ value, onChange }: { value: ISODate; onChange: (fecha:
 }
 
 export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate, onRemove, asignaturaInicial = null }: Props) {
+  const tipos = tiposPersonalizados();
   const [titulo, setTitulo] = useState("");
-  const [tipo, setTipo] = useState<TipoTarea>("ejercicio");
+  const [tipo, setTipo] = useState<TipoTarea>(() => tipos[0]?.value ?? "ejercicio");
   const [asignaturaId, setAsignaturaId] = useState(asignaturaInicial ?? "");
   const [hora, setHora] = useState("");
   const [edicion, setEdicion] = useState<Tarea | null>(null);
@@ -71,6 +73,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
 
   return (
     <div className="day-panel">
+      <p className="day-panel-intro">Organiza tareas, entregas y recordatorios para este día.</p>
       <ul className="list">
         {tareas.length === 0 && <li className="muted">Nada apuntado para este día.</li>}
         {tareas.map((t) => {
@@ -83,10 +86,8 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
                 <div className="task-edit body">
                   <input aria-label="Título" value={edicion.titulo} onChange={(e) => setEdicion({ ...edicion, titulo: e.target.value })} autoFocus />
                   <div className="task-edit-grid">
-                    <TaskDatePicker value={edicion.fecha} onChange={(nuevaFecha) => setEdicion({ ...edicion, fecha: nuevaFecha })} />
-                    <div className="task-edit-time"><select aria-label="Hora de la tarea" value={horaEdicion} onChange={(e) => cambiarHoraEdicion(e.target.value)}><option value="">Hora</option>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select><span>:</span><select aria-label="Minutos de la tarea" value={minutoEdicion} disabled={!horaEdicion} onChange={(e) => cambiarMinutoEdicion(e.target.value)}>{["00", "15", "30", "45"].map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select></div>
-                    <select aria-label="Tipo" value={edicion.tipo} onChange={(e) => setEdicion({ ...edicion, tipo: e.target.value as TipoTarea })}>{TIPOS.map((opcion) => <option key={opcion.value} value={opcion.value}>{opcion.label}</option>)}</select>
-                    <select aria-label="Asignatura" value={edicion.asignaturaId ?? ""} onChange={(e) => setEdicion({ ...edicion, asignaturaId: e.target.value || null })}><option value="">Sin asignatura</option>{asignaturas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.nombre}</option>)}</select>
+                    <div className="task-edit-schedule"><TaskDatePicker value={edicion.fecha} onChange={(nuevaFecha) => setEdicion({ ...edicion, fecha: nuevaFecha })} /><div className="task-edit-time"><select aria-label="Hora de la tarea" value={horaEdicion} onChange={(e) => cambiarHoraEdicion(e.target.value)}><option value="">Hora</option>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select><span>:</span><select aria-label="Minutos de la tarea" value={minutoEdicion} disabled={!horaEdicion} onChange={(e) => cambiarMinutoEdicion(e.target.value)}>{["00", "15", "30", "45"].map((valor) => <option key={valor} value={valor}>{valor}</option>)}</select></div></div>
+                    <div className="task-edit-classification"><select aria-label="Tipo" value={edicion.tipo} onChange={(e) => setEdicion({ ...edicion, tipo: e.target.value as TipoTarea })}>{tipos.map((opcion) => <option key={opcion.value} value={opcion.value}>{opcion.label}</option>)}</select><select aria-label="Asignatura" value={edicion.asignaturaId ?? ""} onChange={(e) => setEdicion({ ...edicion, asignaturaId: e.target.value || null })}><option value="">Sin asignatura</option>{asignaturas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.nombre}</option>)}</select></div>
                   </div>
                   <div className="task-edit-actions"><button type="button" className="task-action" onClick={() => setEdicion(null)}>Cancelar</button><button type="button" className="task-action save" onClick={guardarEdicion}>Guardar cambios</button></div>
                 </div>
@@ -95,7 +96,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
                   <span className="titulo">{t.titulo}</span>
                   <span className="task-meta"><span><Icon name="calendar" size={14} />{fechaLarga(t.fecha)}</span>{t.hora && <span><Icon name="clock" size={14} />{t.hora.slice(0, 5)}</span>}</span>
                   <span className="chips">
-                    <span className={`chip tipo-${t.tipo}`}>{tipoLabel(t.tipo)}</span>
+                    <span className={`chip tipo-${t.tipo}`} style={{ "--task-tag": tipos.find((opcion) => opcion.value === t.tipo)?.color ?? "#98a2b3" } as CSSProperties}>{tipos.find((opcion) => opcion.value === t.tipo)?.label ?? tipoLabel(t.tipo)}</span>
                     {a && <span className="chip"><i className="dot" style={{ background: a.color }} />{a.nombre}</span>}
                     {!t.hecha && <span className="when2">{describeDays(t.fecha)}</span>}
                   </span>
@@ -111,7 +112,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
         <div className="row">
           <div className="time-selects" aria-label="Hora opcional"><select className="native-select" value={horaSeleccionada} onChange={(e) => cambiarHora(e.target.value)} aria-label="Hora"><option value="">Hora</option>{Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => <option key={h} value={h}>{h}</option>)}</select><span>:</span><select className="native-select" value={minutoSeleccionado} onChange={(e) => cambiarMinuto(e.target.value)} disabled={!horaSeleccionada} aria-label="Minutos">{["00", "15", "30", "45"].map((m) => <option key={m} value={m}>{m}</option>)}</select></div>
           <select className="native-select" value={tipo} onChange={(e) => setTipo(e.target.value as TipoTarea)} aria-label="Tipo">
-            {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {tipos.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <select className="native-select" value={asignaturaId} onChange={(e) => setAsignaturaId(e.target.value)} aria-label="Asignatura">
             <option value="">Sin asignatura</option>

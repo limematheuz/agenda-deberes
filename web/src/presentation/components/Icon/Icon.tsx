@@ -15,6 +15,7 @@ const PATHS = {
   sliders: "M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6",
   "chevron-left": "m15 18-6-6 6-6",
   "chevron-right": "m9 18 6-6-6-6",
+  "more-horizontal": "M5 12h.01M12 12h.01M19 12h.01",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof PATHS;

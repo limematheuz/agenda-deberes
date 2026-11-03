@@ -18,6 +18,9 @@ export const supabaseAsignaturasRepository: AsignaturasRepository = {
     if (!data) throw new Error("No se recibió la asignatura creada");
     return fromRow(data);
   },
+  async update(id: string, cambios: Pick<Asignatura, "nombre" | "color">): Promise<void> {
+    assertOk((await supabase.from("asignaturas").update(cambios).eq("id", id)).error);
+  },
   async remove(id: string): Promise<void> {
     assertOk((await supabase.from("asignaturas").delete().eq("id", id)).error);
   },

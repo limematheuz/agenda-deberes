@@ -13,6 +13,7 @@ export interface TareasRepository {
 export interface AsignaturasRepository {
   list(): Promise<Asignatura[]>;
   create(n: NuevaAsignatura): Promise<Asignatura>;
+  update(id: string, cambios: Pick<Asignatura, "nombre" | "color">): Promise<void>;
   remove(id: string): Promise<void>;
   reorder(ids: readonly string[]): Promise<void>;
 }

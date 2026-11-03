@@ -24,6 +24,7 @@ export function useAsignaturas() {
       setAsignaturas(siguiente);
     }),
     remove: (id: string) => run(async () => { await repo.remove(id); setAsignaturas((p) => p.filter((x) => x.id !== id)); }),
+    update: (id: string, cambios: Pick<Asignatura, "nombre" | "color">) => run(async () => { await repo.update(id, cambios); setAsignaturas((p) => p.map((a) => a.id === id ? { ...a, ...cambios } : a)); }),
     reorder: (ids: readonly string[]) => {
       const anterior = asignaturas;
       const porId = new Map(asignaturas.map((asignatura) => [asignatura.id, asignatura]));

@@ -38,6 +38,7 @@ export const previewServices: Services = {
       asignaturas = [...asignaturas, a];
       return a;
     },
+    update: async (id, cambios) => { asignaturas = asignaturas.map((a) => a.id === id ? { ...a, ...cambios } : a); },
     remove: async (id) => { asignaturas = asignaturas.filter((a) => a.id !== id); },
     reorder: async (ids) => { const porId = new Map(asignaturas.map((a) => [a.id, a])); asignaturas = ids.map((id, orden) => ({ ...porId.get(id)!, orden })); },
   },
