@@ -449,10 +449,42 @@
   .mobile-drawer-theme-row .theme-pill { margin: 0; }
   .mobile-drawer-theme-row .theme-pill button { min-width: 60px; width: auto; padding: 0 10px; }
   .mobile-drawer-theme-row .theme-pill button span { display: inline; }
-  .mobile-profile-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--g200); border-radius: 12px; background: var(--g50); }
-  .mobile-profile-card > div { display: grid; min-width: 0; gap: 1px; }
+  .mobile-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--g200);
+    border-radius: 12px;
+    background: var(--g50);
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .mobile-profile-card:hover {
+    background: var(--g100);
+    border-color: var(--g300);
+  }
+  .mobile-profile-card-info {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+    flex: 1;
+  }
   .mobile-profile-card strong { font-size: 13.5px; color: var(--g900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-profile-card small { font-size: 11.5px; color: var(--g500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-profile-edit-badge {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid var(--g200);
+    background: #ffffff;
+    color: var(--g500);
+    flex-shrink: 0;
+  }
   .mobile-menu-bottom .mobile-logout { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--danger); font-weight: 700; }
   .toolbar { margin: 16px 0 18px; gap: 10px; }
   .mobile-subject-tray {

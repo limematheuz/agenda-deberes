@@ -10,7 +10,9 @@ import { MonthView } from "../components/MonthView/MonthView";
 import { NotificationPanel } from "../components/NotificationPanel/NotificationPanel";
 import { NotesSection, RemindersSection } from "../components/RemindersSection/RemindersSection";
 import { obtenerIniciales, Sidebar, type SeccionApp, type UserProfile } from "../components/Sidebar/Sidebar";
-import { SubjectsManager } from "../components/SubjectsManager/SubjectsManager";
+import { CategoriesModal } from "../components/SubjectsManager/CategoriesModal";
+import { SectionsModal } from "../components/SubjectsManager/SectionsModal";
+import { ColorPalettePicker } from "../components/ColorPalettePicker/ColorPalettePicker";
 import { Toolbar } from "../components/Toolbar/Toolbar";
 import { Toast } from "../components/Toast/Toast";
 import { WeekView } from "../components/WeekView/WeekView";
@@ -88,31 +90,39 @@ export function CalendarPage() {
   const mapa = useMemo(() => new Map(asigApi.asignaturas.map((a) => [a.id, a] as const)), [asigApi.asignaturas]);
   const filtros = useTaskFilters(tareasApi.tareas, mapa);
   const [dia, setDia] = useState<ISODate | null>(null);
-  const [verAsig, setVerAsig] = useState(false);
-  const [gestorOpciones, setGestorOpciones] = useState<{
-    tab: "asignaturas" | "secciones";
-    seccionId: string;
-    editarAsignaturaId: string | null;
-    editarSeccionId: string | null;
-  }>({
-    tab: "asignaturas",
-    seccionId: "general",
-    editarAsignaturaId: null,
-    editarSeccionId: null,
-  });
+  const [modalCategorias, setModalCategorias] = useState(false);
+  const [categoriaEditarId, setCategoriaEditarId] = useState<string | null>(null);
+  const [seccionInicialCat, setSeccionInicialCat] = useState<string>("general");
+
+  const [modalSecciones, setModalSecciones] = useState(false);
+  const [seccionEditarId, setSeccionEditarId] = useState<string | null>(null);
+
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [nombrePerfil, setNombrePerfil] = useState("");
+  const [cursoPerfil, setCursoPerfil] = useState("");
+  const [colorPerfil, setColorPerfil] = useState("#3b82f6");
+
   const abrirGestor = (opciones?: {
     tab?: "asignaturas" | "secciones";
     seccionId?: string;
     editarAsignaturaId?: string | null;
     editarSeccionId?: string | null;
   }): void => {
-    setGestorOpciones({
-      tab: opciones?.tab ?? "asignaturas",
-      seccionId: opciones?.seccionId ?? "general",
-      editarAsignaturaId: opciones?.editarAsignaturaId ?? null,
-      editarSeccionId: opciones?.editarSeccionId ?? null,
-    });
-    setVerAsig(true);
+    if (opciones?.tab === "secciones") {
+      setSeccionEditarId(opciones.editarSeccionId ?? null);
+      setModalSecciones(true);
+    } else {
+      setCategoriaEditarId(opciones?.editarAsignaturaId ?? null);
+      setSeccionInicialCat(opciones?.seccionId ?? "general");
+      setModalCategorias(true);
+    }
+  };
+
+  const abrirPerfil = (): void => {
+    setNombrePerfil(perfil.nombre);
+    setCursoPerfil(perfil.curso);
+    setColorPerfil(perfil.color);
+    setEditandoPerfil(true);
   };
   const [seccion, setSeccion] = useState<SeccionApp>("calendario");
   const [barraContraida, setBarraContraida] = useState(false);
@@ -747,7 +757,7 @@ export function CalendarPage() {
             asignaturas={asigApi.asignaturas}
             onGuardarClase={guardarClaseSemanal}
             onBorrarClase={borrarClaseSemanal}
-            onGestionarAsignaturas={() => setVerAsig(true)}
+            onGestionarAsignaturas={() => setModalCategorias(true)}
           />
         ) : seccion === "recordatorios" ? (
           <RemindersSection
@@ -797,15 +807,6 @@ export function CalendarPage() {
                   {asignatura.nombre}
                 </button>
               ))}
-              <button
-                type="button"
-                className="cat-badge-btn cat-badge-add-btn"
-                onClick={() => abrirGestor({ tab: "asignaturas" })}
-                title="Crear nueva categoría"
-              >
-                <Icon name="plus" size={12} />
-                <span>Añadir</span>
-              </button>
             </div>
           </section>
           <section className="cal">
@@ -973,16 +974,28 @@ export function CalendarPage() {
                 </div>
               </div>
             </div>
-            <div className="mobile-profile-card">
+            <button
+              type="button"
+              className="mobile-profile-card"
+              onClick={() => {
+                abrirPerfil();
+                setMenuMovil(false);
+              }}
+              title="Ver y editar tu perfil"
+              aria-label="Editar perfil"
+            >
               <span className="user-avatar" style={{ background: perfil.color }}>{obtenerIniciales(perfil.nombre, perfil.email)}</span>
-              <div>
+              <div className="mobile-profile-card-info">
                 <div className="user-name-row">
                   <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
                   <span className="user-course-badge">{/^(CFGS|Mi curso)/i.test(perfil.curso.trim()) ? "Personal" : (perfil.curso.trim() || "Personal")}</span>
                 </div>
                 <small>{perfil.email || "Mi cuenta"}</small>
               </div>
-            </div>
+              <span className="mobile-profile-edit-badge" aria-hidden="true">
+                <Icon name="pencil" size={14} />
+              </span>
+            </button>
             <button type="button" className="mobile-logout" onClick={() => void salir()}><Icon name="logout" />Cerrar sesión</button>
           </div>
         </div>
@@ -1004,34 +1017,96 @@ export function CalendarPage() {
           />
         )}
       </Dialog>
-      <Dialog abierto={verAsig} titulo={gestorOpciones.tab === "secciones" ? "Gestionar secciones" : "Gestionar categorías"} onCerrar={() => setVerAsig(false)}>
-        <SubjectsManager
-          asignaturas={asigApi.asignaturas}
-          onAdd={asigApi.add}
-          onUpdate={asigApi.update}
-          onRemove={asigApi.remove}
-          categorias={categorias}
-          categoriaPorAsignatura={categoriaPorAsignatura}
-          onAsignarCategoria={(asignaturaId, categoriaId) => setCategoriaPorAsignatura((actual) => ({ ...actual, [asignaturaId]: categoriaId }))}
-          onCrearCategoria={crearCategoriaRapida}
-          onRenombrarCategoria={renombrarCategoria}
-          onBorrarCategoria={borrarCategoria}
-          onReorderCategorias={(origen, destino) =>
-            setCategorias((actual) => {
-              const orden = actual.filter((categoria) => categoria.id !== origen);
-              orden.splice(
-                orden.findIndex((categoria) => categoria.id === destino),
-                0,
-                actual.find((categoria) => categoria.id === origen)!
-              );
-              return orden;
-            })
-          }
-          tabInicial={gestorOpciones.tab}
-          seccionPreseleccionada={gestorOpciones.seccionId}
-          asignaturaEditarInicial={gestorOpciones.editarAsignaturaId}
-          seccionEditarInicial={gestorOpciones.editarSeccionId}
-        />
+      <CategoriesModal
+        abierto={modalCategorias}
+        onCerrar={() => setModalCategorias(false)}
+        asignaturas={asigApi.asignaturas}
+        categorias={categorias}
+        categoriaPorAsignatura={categoriaPorAsignatura}
+        onAdd={asigApi.add}
+        onUpdate={asigApi.update}
+        onRemove={asigApi.remove}
+        onAsignarCategoria={(asignaturaId, categoriaId) =>
+          setCategoriaPorAsignatura((actual) => ({ ...actual, [asignaturaId]: categoriaId }))
+        }
+        seccionInicialId={seccionInicialCat}
+        editarAsignaturaId={categoriaEditarId}
+      />
+
+      <SectionsModal
+        abierto={modalSecciones}
+        onCerrar={() => setModalSecciones(false)}
+        categorias={categorias}
+        asignaturas={asigApi.asignaturas}
+        categoriaPorAsignatura={categoriaPorAsignatura}
+        onCrearCategoria={crearCategoriaRapida}
+        onRenombrarCategoria={renombrarCategoria}
+        onBorrarCategoria={borrarCategoria}
+        onReorderCategorias={(origen, destino) =>
+          setCategorias((actual) => {
+            const orden = actual.filter((categoria) => categoria.id !== origen);
+            orden.splice(
+              orden.findIndex((categoria) => categoria.id === destino),
+              0,
+              actual.find((categoria) => categoria.id === origen)!
+            );
+            return orden;
+          })
+        }
+        editarSeccionId={seccionEditarId}
+      />
+
+      <Dialog abierto={editandoPerfil} titulo="Tu perfil" onCerrar={() => setEditandoPerfil(false)}>
+        <form
+          className="profile-edit-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const n = nombrePerfil.trim();
+            const c = cursoPerfil.trim();
+            setPerfil((actual) => ({ ...actual, nombre: n, curso: c, color: colorPerfil }));
+            setToast({ mensaje: "Perfil actualizado.", tipo: "exito" });
+            setEditandoPerfil(false);
+          }}
+        >
+          <div className="profile-edit-preview">
+            <span className="user-avatar large" style={{ background: colorPerfil }}>
+              {obtenerIniciales(nombrePerfil, perfil.email)}
+            </span>
+            <div>
+              <strong>{nombrePerfil.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
+              <small>{perfil.email || "Mi cuenta"}</small>
+            </div>
+          </div>
+          <label>
+            <span>Nombre visible</span>
+            <input
+              value={nombrePerfil}
+              onChange={(e) => setNombrePerfil(e.target.value)}
+              placeholder="Ej. Matheus"
+              autoFocus
+            />
+          </label>
+          <label>
+            <span>Rol, equipo o etiqueta (se muestra como badge)</span>
+            <input
+              value={cursoPerfil}
+              onChange={(e) => setCursoPerfil(e.target.value)}
+              placeholder="Ej. Personal, Trabajo, Freelance…"
+            />
+          </label>
+          <div className="profile-color-picker">
+            <span>Color de perfil</span>
+            <ColorPalettePicker value={colorPerfil} onChange={setColorPerfil} ariaLabel="Color de perfil" />
+          </div>
+          <div className="profile-form-actions">
+            <button type="button" className="secondary" onClick={() => setEditandoPerfil(false)}>
+              Cancelar
+            </button>
+            <button type="submit" className="primary">
+              Guardar cambios
+            </button>
+          </div>
+        </form>
       </Dialog>
     </div>
   );

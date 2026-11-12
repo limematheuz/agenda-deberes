@@ -12,6 +12,7 @@ const PATHS = {
   pencil: "M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z",
   trash: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v5M14 11v5",
   menu: "M4 7h16M4 12h16M4 17h16",
+  list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   sliders: "M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6",
   "chevron-left": "m15 18-6-6 6-6",
   "chevron-right": "m9 18 6-6-6-6",
