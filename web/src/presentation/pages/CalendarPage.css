@@ -1,5 +1,33 @@
 /* Estilos propios de CalendarPage. Tokens y base viven en styles/. */
-.app { min-height: 100dvh; padding: 18px; isolation: isolate; background: radial-gradient(ellipse 58% 56% at 1% 100%, rgba(131,194,201,.72), transparent 70%), radial-gradient(ellipse 48% 50% at 99% 8%, rgba(205,164,194,.62), transparent 72%), radial-gradient(ellipse 45% 46% at 85% 92%, rgba(203,131,99,.42), transparent 75%), radial-gradient(ellipse 40% 42% at 20% 26%, rgba(222,159,133,.32), transparent 73%), radial-gradient(ellipse 40% 42% at 45% 10%, rgba(251,228,193,.84), transparent 75%), linear-gradient(135deg, #dfdad1, #f3eee7 48%, #d8cec3); transition: background .28s ease; }.app::before { content: ""; position: fixed; z-index: 0; inset: 0; pointer-events: none; opacity: .48; background-image: radial-gradient(circle at 1px 1px, rgba(64,49,39,.20) 0 .58px, transparent .72px), radial-gradient(circle at 3px 4px, rgba(255,255,255,.50) 0 .45px, transparent .62px); background-size: 6px 6px, 9px 9px; }.app-shell { position: relative; z-index: 1; }
+.app {
+  min-height: 100dvh;
+  padding: 18px;
+  isolation: isolate;
+  position: relative;
+  background-color: #faf7f2;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 85% 8%, rgba(254, 215, 170, 0.18), transparent 70%),
+    radial-gradient(ellipse 65% 55% at 5% 90%, rgba(253, 230, 138, 0.15), transparent 70%),
+    url('/assets/bg-gradient-light.jpg');
+  background-size: cover, cover, cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transition: background 0.3s ease;
+}
+.app::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background-image: url('/assets/noise.svg');
+  background-size: 140px 140px;
+  background-repeat: repeat;
+  opacity: 0.055;
+  transform: translateZ(0);
+}
+.app-shell { position: relative; z-index: 1; }
 .app-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: calc(100dvh - 36px); gap: 14px; transition: grid-template-columns .2s ease; }
 .app-shell.collapsed { grid-template-columns: 76px minmax(0, 1fr); }
 .main { background: rgba(255,255,255,.82); border: 1px solid rgba(39,39,42,.16); border-radius: 24px; padding: 32px clamp(18px, 3vw, 36px) 38px; box-shadow: 0 20px 55px rgba(60,48,37,.13), 0 2px 5px rgba(60,48,37,.06), inset 0 1px rgba(255,255,255,.9); min-width: 0; backdrop-filter: blur(26px) saturate(1.15); }
@@ -134,9 +162,36 @@
 .overview-empty-text { margin: 0; font-size: 12px; color: var(--g500); padding: 6px 0; text-align: center; }
 .mobile-menu-share-btn { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 12px; border-radius: 10px; color: #2e90fa; font-size: 15px; font-weight: 650; text-align: left; background: transparent; cursor: pointer; }
 .mobile-menu-share-btn:hover { background: var(--g100); }
-.app.dark { --g25:#171719; --g50:#1c1c1f; --g100:#262629; --g200:#36363a; --g300:#505055; --g400:#89898f; --g500:#aaaab0; --g600:#c7c7cd; --g700:#e6e6ea; --g900:#f5f5f7; --g950:#fff; background: radial-gradient(ellipse 70% 74% at 1% 100%, rgba(3,34,67,.84), transparent 72%), radial-gradient(ellipse 67% 61% at 101% 2%, rgba(6,28,63,.78), transparent 74%), radial-gradient(ellipse 46% 58% at 49% 38%, rgba(9,28,56,.64), transparent 77%), radial-gradient(ellipse 32% 42% at 68% 92%, rgba(11,50,79,.37), transparent 77%), #08090d; color: #f5f5f7; }.app.dark::before { opacity: .32; background-image: radial-gradient(circle at 1px 1px, rgba(123,176,255,.23) 0 .58px, transparent .72px), radial-gradient(circle at 3px 4px, rgba(255,255,255,.17) 0 .45px, transparent .62px); }
+.app.dark {
+  --g25: #171719;
+  --g50: #1c1c1f;
+  --g100: #262629;
+  --g200: #36363a;
+  --g300: #505055;
+  --g400: #89898f;
+  --g500: #aaaab0;
+  --g600: #c7c7cd;
+  --g700: #e6e6ea;
+  --g900: #f5f5f7;
+  --g950: #fff;
+  background-color: #050608;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 94% 8%, rgba(37, 99, 235, 0.28), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 96% 50%, rgba(14, 165, 233, 0.18), transparent 65%),
+    radial-gradient(ellipse 45% 40% at 75% 20%, rgba(59, 130, 246, 0.20), transparent 65%),
+    radial-gradient(ellipse 65% 55% at 8% 90%, rgba(126, 34, 206, 0.12), transparent 70%),
+    url('/assets/bg-gradient-dark.jpg');
+  background-size: cover, cover, cover, cover, cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #f5f5f7;
+}
+.app.dark::before {
+  opacity: 0.045;
+}
 .app.dark .main { background: rgba(19,19,21,.88); border-color: rgba(255,255,255,.12); box-shadow: 0 20px 55px rgba(0,0,0,.44), inset 0 1px rgba(255,255,255,.045); }
-.app.dark .sidebar { color: #c7c7cc; background: linear-gradient(155deg, rgba(45,45,48,.62), rgba(24,24,27,.48)); border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(34px) saturate(1.25); }.app.dark .brand, .app.dark .nav-item.on, .app.dark .sub.on { color: #fff; }.app.dark .nav-item:hover, .app.dark .sub:hover { background: rgba(255,255,255,.12); color: #fff; }.app.dark .nav-item.on, .app.dark .sub.on { background: rgba(255,255,255,.16); box-shadow: inset 0 1px rgba(255,255,255,.09); }
+.app.dark .sidebar { color: #c7c7cc; background: #141418; border: 1px solid rgba(255,255,255,.09); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px rgba(255, 255, 255, 0.06); backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }.app.dark .brand, .app.dark .nav-item.on, .app.dark .sub.on { color: #fff; }.app.dark .nav-item:hover, .app.dark .sub:hover { background: rgba(255,255,255,.12); color: #fff; }.app.dark .nav-item.on, .app.dark .sub.on { background: rgba(255,255,255,.16); box-shadow: inset 0 1px rgba(255,255,255,.09); }
 .app.dark .cal { background: #151517; border-color: rgba(255,255,255,.12); box-shadow: inset 0 1px rgba(255,255,255,.045); }.app.dark .summary-cards article, .app.dark .upcoming, .app.dark .search-results { background: rgba(28,28,31,.88); border-color: rgba(255,255,255,.14); box-shadow: inset 0 1px rgba(255,255,255,.06); }
 .app.dark .tabs { background: #242428; border-color: rgba(255,255,255,.16); box-shadow: inset 0 1px rgba(255,255,255,.06); }.app.dark .tabs button.on { background: #46464d; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .app.dark .search, .app.dark .pager, .app.dark .viewsel, .app.dark .badge { background: #29292d; border-color: rgba(255,255,255,.16); color: #e5e5ea; }.app.dark .badge span { background: #343438; border-color: rgba(255,255,255,.1); }.app.dark .crumbs b { background: #343438; color: #fff; }.app.dark .theme-pill { border-color: rgba(255,255,255,.15); background: #242428; box-shadow: inset 0 1px rgba(255,255,255,.06); }.app.dark .theme-pill button.on { background: #4a4a51; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
