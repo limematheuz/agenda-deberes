@@ -50,6 +50,8 @@ interface Props {
   onRemoveAsignatura?: (id: string) => Promise<void>;
   perfil: UserProfile;
   onGuardarPerfil: (cambios: Pick<UserProfile, "nombre" | "curso" | "color">) => void;
+  textoBusqueda?: string;
+  onTextoBusqueda?: (texto: string) => void;
 }
 
 export function Sidebar({
@@ -75,6 +77,8 @@ export function Sidebar({
   onRemoveAsignatura,
   perfil,
   onGuardarPerfil,
+  textoBusqueda = "",
+  onTextoBusqueda,
 }: Props) {
   const [destinoAsig, setDestinoAsig] = useState<string | null>(null);
   const [arrastrandoAsigId, setArrastrandoAsigId] = useState<string | null>(null);
@@ -207,6 +211,40 @@ export function Sidebar({
             <Icon name={contraida ? "chevron-right" : "chevron-left"} size={16} />
           </button>
         </div>
+
+        {contraida ? (
+          <button
+            type="button"
+            className="nav-item sidebar-search-collapsed"
+            onClick={onAlternar}
+            title="Buscar..."
+            aria-label="Buscar"
+            {...etiquetaContraida("Buscar")}
+          >
+            <Icon name="search" size={17} />
+          </button>
+        ) : (
+          <div className="sidebar-search">
+            <Icon name="search" size={15} />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={textoBusqueda}
+              onChange={(e) => onTextoBusqueda?.(e.target.value)}
+              aria-label="Buscar tareas o notas"
+            />
+            {textoBusqueda && (
+              <button
+                type="button"
+                className="sidebar-search-clear"
+                onClick={() => onTextoBusqueda?.("")}
+                aria-label="Limpiar búsqueda"
+              >
+                <Icon name="x" size={12} />
+              </button>
+            )}
+          </div>
+        )}
 
         <nav className="primary-nav" aria-label="Navegación principal">
           <button className={`nav-item${seccion === "resumen" ? " on" : ""}`} onClick={() => onSeccion("resumen")} aria-current={seccion === "resumen" ? "page" : undefined} {...etiquetaContraida("Resumen")}>

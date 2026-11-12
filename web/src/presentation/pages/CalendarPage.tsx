@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { addDays, formatLong, todayISO } from "../../domain/dates";
-import { tipoLabel, type ClaseSemanal, type ISODate, type NotaBloc, type Recordatorio } from "../../domain/entities";
+import { type ClaseSemanal, type ISODate, type NotaBloc, type Recordatorio } from "../../domain/entities";
 import { describeDays } from "../../domain/urgency";
 import { CalendarHeader } from "../components/CalendarHeader/CalendarHeader";
 import { DayPanel } from "../components/DayPanel/DayPanel";
@@ -321,6 +321,42 @@ export function CalendarPage() {
     setToast({ mensaje: "Sección eliminada. Sus categorías vuelven a General.", tipo: "exito" });
   };
 
+  const hoyISO = todayISO();
+  const diaHoySemana = new Date().getDay() === 0 ? 7 : new Date().getDay();
+  const nombreDiaSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][new Date().getDay()];
+  const fechaHoyFormateada = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+
+  const tareasPendientes = tareasApi.tareas.filter((t) => !t.hecha);
+  const tareasHoy = tareasPendientes.filter((t) => t.fecha === hoyISO);
+  const recordatoriosActivos = recordatorios.filter((r) => !r.hecho);
+  const clasesHoy = clasesSemanales
+    .filter((c) => c.diaSemana === diaHoySemana)
+    .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+
+  const compartirApp = async (): Promise<void> => {
+    const url = window.location.origin;
+    const datos = {
+      title: "CalendarAppio",
+      text: "Organiza tu calendario, horario semanal, recordatorios y bloc de notas con CalendarAppio.",
+      url,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(datos);
+        setToast({ mensaje: "Enlace compartido.", tipo: "exito" });
+      } catch {
+        // Cancelado por el usuario
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setToast({ mensaje: "Enlace copiado al portapapeles. ¡Listo para compartir!", tipo: "exito" });
+      } catch {
+        setToast({ mensaje: `Copia este enlace: ${url}`, tipo: "exito" });
+      }
+    }
+  };
+
   const etiquetaSeccion =
     seccion === "resumen"
       ? "Resumen"
@@ -381,22 +417,267 @@ export function CalendarPage() {
           setPerfil((actual) => ({ ...actual, ...cambios }));
           setToast({ mensaje: "Perfil actualizado.", tipo: "exito" });
         }}
+        textoBusqueda={filtros.texto}
+        onTextoBusqueda={filtros.setTexto}
       />
       <main className="main">
         <div className="crumbs">
-          <span className="desktop-crumb">CalendarAppio</span><span className="desktop-crumb"><Icon name="chevron-right" size={14} /></span><b className="desktop-crumb">{etiquetaSeccion}</b>
-          <div className="mobile-brand"><span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="" /></span><span>CalendarAppio</span></div>
-          <div className="theme-pill" aria-label="Apariencia"><button aria-label="Modo claro" className={tema === "claro" ? "on" : ""} onClick={() => setTema("claro")}><Icon name="sun" size={14} /><span>Claro</span></button><button aria-label="Modo oscuro" className={tema === "oscuro" ? "on" : ""} onClick={() => setTema("oscuro")}><Icon name="moon" size={14} /><span>Oscuro</span></button></div>
-          <div className="mobile-actions">
-            <button className="icon-btn" onClick={() => setMenuMovil((abierto) => !abierto)} aria-label="Abrir menú" aria-expanded={menuMovil}><Icon name="menu" /></button>
+          <div className="crumbs-left">
+            <span className="desktop-crumb">CalendarAppio</span>
+            <span className="desktop-crumb"><Icon name="chevron-right" size={14} /></span>
+            <b className="desktop-crumb">{etiquetaSeccion}</b>
+            <span className="synced-compact" title="Tus datos se guardan y sincronizan automáticamente en tu cuenta">
+              <i className="synced-dot" />
+              <span className="synced-label">Sincronizado</span>
+            </span>
+          </div>
+          <div className="mobile-brand">
+            <span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="CalendarAppio" /></span>
+            <span className="mobile-brand-name">CalendarAppio</span>
+          </div>
+          <div className="header-right-actions">
+            <button
+              type="button"
+              className="share-header-btn"
+              onClick={() => void compartirApp()}
+              title="Compartir enlace de CalendarAppio"
+              aria-label="Compartir aplicación"
+            >
+              <Icon name="share" size={16} />
+            </button>
+            <NotificationPanel
+              tareas={tareasApi.tareas}
+              recordatorios={recordatorios}
+              estado={push.estado}
+              onActivate={() => void push.activar()}
+              onSelect={(t) => { cal.setAncla(t.fecha); abrirDia(t.fecha); }}
+              onSelectRecordatorio={() => setSeccion("recordatorios")}
+            />
+            <div className="theme-pill desktop-theme-pill" aria-label="Apariencia">
+              <button aria-label="Modo claro" className={tema === "claro" ? "on" : ""} onClick={() => setTema("claro")}><Icon name="sun" size={14} /><span>Claro</span></button>
+              <button aria-label="Modo oscuro" className={tema === "oscuro" ? "on" : ""} onClick={() => setTema("oscuro")}><Icon name="moon" size={14} /><span>Oscuro</span></button>
+            </div>
+            <div className="mobile-actions">
+              <button className="icon-btn" onClick={() => setMenuMovil((abierto) => !abierto)} aria-label="Abrir menú" aria-expanded={menuMovil}><Icon name="menu" /></button>
+            </div>
           </div>
         </div>
-        <div className="page-title"><h1>{etiquetaSeccion}</h1><div className="page-tools"><span className="synced">Sincronizado automáticamente</span><NotificationPanel tareas={tareasApi.tareas} recordatorios={recordatorios} estado={push.estado} onActivate={() => void push.activar()} onSelect={(t) => { cal.setAncla(t.fecha); abrirDia(t.fecha); }} onSelectRecordatorio={() => setSeccion("recordatorios")} /></div></div>
+        {seccion !== "calendario" && (
+          <div className="page-title">
+            <div>
+              <h1>{etiquetaSeccion}</h1>
+              {seccion === "resumen" && (
+                <p className="overview-welcome">
+                  Hola, <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "bienvenido"}</strong> · {fechaHoyFormateada}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {seccion === "resumen" ? (
           <section className="overview" aria-label="Resumen de actividad">
-            <div className="summary-cards"><article><span>Por hacer</span><strong>{tareasApi.tareas.filter((t) => !t.hecha).length}</strong></article><article><span>Completados</span><strong>{tareasApi.tareas.filter((t) => t.hecha).length}</strong></article><article><span>Categorías</span><strong>{asigApi.asignaturas.length}</strong></article></div>
-            <div className="upcoming"><h2>Próximas tareas</h2>{tareasApi.tareas.filter((t) => !t.hecha).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 8).map((t) => <button key={t.id} onClick={() => { cal.setAncla(t.fecha); setSeccion("calendario"); }}><i style={{ background: t.asignaturaId ? mapa.get(t.asignaturaId)?.color : "#98a2b3" }} /><span><b>{t.titulo}</b><small>{tipoLabel(t.tipo)} · {describeDays(t.fecha)}</small></span><span>{t.hora?.slice(0, 5) ?? "Todo el día"}</span></button>)}{tareasApi.tareas.every((t) => t.hecha) && <p className="muted">No tienes tareas pendientes.</p>}</div>
+            {/* Tarjetas KPI interactivas */}
+            <div className="summary-cards" role="region" aria-label="Indicadores clave">
+              <article className="summary-card summary-card-tasks" onClick={() => setSeccion("calendario")} title="Ver todas las tareas pendientes">
+                <div className="summary-card-tasks-content">
+                  <div className="summary-card-tasks-left">
+                    <span className="summary-card-icon icon-tasks"><Icon name="calendar" size={17} /></span>
+                    <div className="summary-card-tasks-text">
+                      <span className="summary-card-tag">Tareas</span>
+                      <span className="summary-card-label">Por hacer · {tareasHoy.length} hoy</span>
+                    </div>
+                  </div>
+                  <strong className="summary-card-num">{tareasPendientes.length}</strong>
+                </div>
+              </article>
+
+              <article className="summary-card summary-card-square" onClick={() => setSeccion("calendario")} title="Ver tareas de hoy">
+                <div className="summary-card-top">
+                  <span className="summary-card-icon icon-today"><Icon name="clock" size={16} /></span>
+                  <span className="summary-card-tag">Hoy</span>
+                </div>
+                <strong className="summary-card-num">{tareasHoy.length}</strong>
+                <span className="summary-card-label">Entregas de hoy</span>
+              </article>
+
+              <article className="summary-card summary-card-square" onClick={() => setSeccion("horario")} title="Ver horario semanal">
+                <div className="summary-card-top">
+                  <span className="summary-card-icon icon-schedule"><Icon name="book" size={16} /></span>
+                  <span className="summary-card-tag">Horario</span>
+                </div>
+                <strong className="summary-card-num">{clasesHoy.length}</strong>
+                <span className="summary-card-label">Bloques hoy ({clasesSemanales.length} sem)</span>
+              </article>
+
+              <article className="summary-card summary-card-square" onClick={() => setSeccion("recordatorios")} title="Ver recordatorios">
+                <div className="summary-card-top">
+                  <span className="summary-card-icon icon-reminders"><Icon name="bell" size={16} /></span>
+                  <span className="summary-card-tag">Avisos</span>
+                </div>
+                <strong className="summary-card-num">{recordatoriosActivos.length}</strong>
+                <span className="summary-card-label">Avisos activos</span>
+              </article>
+
+              <article className="summary-card summary-card-square" onClick={() => setSeccion("notas")} title="Ver bloc de notas">
+                <div className="summary-card-top">
+                  <span className="summary-card-icon icon-notes"><Icon name="note" size={16} /></span>
+                  <span className="summary-card-tag">Notas</span>
+                </div>
+                <strong className="summary-card-num">{notasBloc.length}</strong>
+                <span className="summary-card-label">Notas en tu bloc</span>
+              </article>
+            </div>
+
+            {/* Cuadrícula central: Próximas tareas + Widgets de Horario, Recordatorios y Notas */}
+            <div className="overview-grid">
+              <section className="overview-panel overview-tasks">
+                <div className="overview-panel-head">
+                  <div>
+                    <h2>Próximas tareas</h2>
+                    <span className="overview-subtitle">{tareasPendientes.length} pendientes en tu agenda</span>
+                  </div>
+                  <button type="button" className="overview-link-btn" onClick={() => setSeccion("calendario")}>
+                    Ver calendario →
+                  </button>
+                </div>
+
+                <div className="overview-task-list">
+                  {tareasPendientes.slice(0, 6).map((t) => {
+                    const cat = t.asignaturaId ? mapa.get(t.asignaturaId) : null;
+                    const esHoy = t.fecha === hoyISO;
+                    return (
+                      <article key={t.id} className={`overview-task-item${esHoy ? " is-today" : ""}`}>
+                        <button
+                          type="button"
+                          className={`overview-check-btn${t.hecha ? " checked" : ""}`}
+                          onClick={(e) => { e.stopPropagation(); void tareasApi.toggle(t); }}
+                          title="Marcar como hecha"
+                          aria-label="Marcar como hecha"
+                        >
+                          <span className="check-box" />
+                        </button>
+                        <div className="overview-task-body" onClick={() => { cal.setAncla(t.fecha); abrirDia(t.fecha); }}>
+                          <div className="overview-task-title-row">
+                            <strong>{t.titulo}</strong>
+                            {cat && <span className="overview-cat-pill" style={{ "--cat-c": cat.color } as CSSProperties}>{cat.nombre}</span>}
+                          </div>
+                          <div className="overview-task-meta">
+                            <span className={`overview-date-pill${esHoy ? " today" : ""}`}>
+                              {describeDays(t.fecha)}
+                            </span>
+                            {t.hora && <span className="overview-time-pill"><Icon name="clock" size={11} />{t.hora.slice(0, 5)}</span>}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {tareasPendientes.length === 0 && (
+                    <div className="overview-empty">
+                      <p>¡Todo al día! No tienes tareas pendientes.</p>
+                      <button type="button" className="primary" onClick={() => abrirDia(hoyISO)}>
+                        <Icon name="plus" size={14} /> Añadir tarea
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <div className="overview-widgets">
+                {/* Horario de hoy */}
+                <section className="overview-panel overview-today-schedule">
+                  <div className="overview-panel-head">
+                    <div>
+                      <h2>Horario de hoy</h2>
+                      <span className="overview-subtitle">{nombreDiaSemana} · {clasesHoy.length} {clasesHoy.length === 1 ? "bloque" : "bloques"}</span>
+                    </div>
+                    <button type="button" className="overview-link-btn" onClick={() => setSeccion("horario")}>
+                      Ver horario →
+                    </button>
+                  </div>
+                  <div className="overview-schedule-list">
+                    {clasesHoy.map((c) => {
+                      const asig = c.asignaturaId ? mapa.get(c.asignaturaId) : null;
+                      const nombreBloque = c.titulo?.trim() || asig?.nombre || "Actividad";
+                      const colorBloque = c.color || asig?.color || "#3b82f6";
+                      return (
+                        <div key={c.id} className="overview-schedule-item" style={{ "--c": colorBloque } as CSSProperties} onClick={() => setSeccion("horario")}>
+                          <span className="schedule-item-time">{c.horaInicio} – {c.horaFin}</span>
+                          <div className="schedule-item-info">
+                            <strong>{nombreBloque}</strong>
+                            {c.aula && <small>{c.aula}</small>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {clasesHoy.length === 0 && (
+                      <p className="overview-empty-text">Sin bloques fijos programados para hoy {nombreDiaSemana}.</p>
+                    )}
+                  </div>
+                </section>
+
+                {/* Avisos pendientes */}
+                <section className="overview-panel overview-reminders">
+                  <div className="overview-panel-head">
+                    <div>
+                      <h2>Avisos pendientes</h2>
+                      <span className="overview-subtitle">{recordatoriosActivos.length} activos</span>
+                    </div>
+                    <button type="button" className="overview-link-btn" onClick={() => setSeccion("recordatorios")}>
+                      Ver todos →
+                    </button>
+                  </div>
+                  <div className="overview-reminders-list">
+                    {recordatoriosActivos.slice(0, 3).map((r) => (
+                      <div key={r.id} className="overview-reminder-item">
+                        <button
+                          type="button"
+                          className="overview-check-btn"
+                          onClick={() => void actualizarRecordatorio(r.id, { hecho: true })}
+                          title="Marcar recordatorio como hecho"
+                        >
+                          <span className="check-box" />
+                        </button>
+                        <div className="overview-reminder-info" onClick={() => setSeccion("recordatorios")}>
+                          <p>{r.titulo}</p>
+                          {r.fechaAviso && <small className="reminder-due">{r.fechaAviso}</small>}
+                        </div>
+                      </div>
+                    ))}
+                    {recordatoriosActivos.length === 0 && (
+                      <p className="overview-empty-text">Sin avisos pendientes. ¡Todo en orden!</p>
+                    )}
+                  </div>
+                </section>
+
+                {/* Bloc de notas preview */}
+                <section className="overview-panel overview-notes">
+                  <div className="overview-panel-head">
+                    <div>
+                      <h2>Bloc de notas</h2>
+                      <span className="overview-subtitle">{notasBloc.length} notas guardadas</span>
+                    </div>
+                    <button type="button" className="overview-link-btn" onClick={() => setSeccion("notas")}>
+                      Abrir bloc →
+                    </button>
+                  </div>
+                  <div className="overview-notes-preview" onClick={() => setSeccion("notas")}>
+                    {notasBloc.slice(0, 2).map((n) => (
+                      <article key={n.id} className="overview-note-mini" style={{ "--note-c": n.color } as CSSProperties}>
+                        <strong>{n.titulo.trim() || "Nota sin título"}</strong>
+                        {n.contenido && <p>{n.contenido.slice(0, 75)}...</p>}
+                        {n.items && n.items.length > 0 && (
+                          <small>{n.items.filter((i) => i.hecho).length}/{n.items.length} casillas listas</small>
+                        )}
+                      </article>
+                    ))}
+                    {notasBloc.length === 0 && (
+                      <p className="overview-empty-text">No tienes notas todavía. Toca para redactar una.</p>
+                    )}
+                  </div>
+                </section>
+              </div>
+            </div>
           </section>
         ) : seccion === "horario" ? (
           <WeeklySchedule
@@ -421,8 +702,8 @@ export function CalendarPage() {
             onBorrarNota={borrarNotaBloc}
           />
         ) : <>
-          <Toolbar tipo={filtros.tipo} onTipo={filtros.setTipo} asignatura={filtros.asignatura} onAsignatura={filtros.setAsignatura} asignaturas={asigApi.asignaturas} texto={filtros.texto} onTexto={filtros.setTexto} />
-          <section className="mobile-subject-tray" aria-label="Categorías disponibles"><div><b>Categorías</b><span>Toca una para crear una tarea; en escritorio también puedes arrastrarla.</span></div><div className="mobile-subjects">{asigApi.asignaturas.map((asignatura) => <button key={asignatura.id} draggable onDragStart={(e) => { e.dataTransfer.setData("application/x-agenda-subject", asignatura.id); e.dataTransfer.effectAllowed = "copy"; }} onClick={() => abrirDia(todayISO(), asignatura.id)}><i style={{ background: asignatura.color }} />{asignatura.nombre}</button>)}</div></section><section className="cal">
+          <Toolbar tipo={filtros.tipo} onTipo={filtros.setTipo} asignatura={filtros.asignatura} onAsignatura={filtros.setAsignatura} asignaturas={asigApi.asignaturas} />
+          <section className="mobile-subject-tray" aria-label="Categorías disponibles"><div><b>Categorías</b><span>Toca una para crear una tarea; en escritorio también puedes arrastrarla.</span></div><div className="mobile-subjects">{asigApi.asignaturas.map((asignatura) => <button key={asignatura.id} className="cat-badge-btn" style={{ "--c": asignatura.color } as CSSProperties} draggable onDragStart={(e) => { e.dataTransfer.setData("application/x-agenda-subject", asignatura.id); e.dataTransfer.effectAllowed = "copy"; }} onClick={() => abrirDia(todayISO(), asignatura.id)}><i style={{ background: asignatura.color }} />{asignatura.nombre}</button>)}</div></section><section className="cal">
             <CalendarHeader titulo={cal.titulo} inicio={cal.inicio} fin={cal.fin} vista={cal.vista} onVista={cal.setVista} onMover={cal.mover} onHoy={cal.irAHoy} onAnadir={() => abrirDia(todayISO())} />
             {cal.vista === "mes"
               ? <MonthView year={cal.year} month={cal.month} tareas={filtros.visibles} asignaturas={mapa} onSelectDay={abrirDia} onToggle={tareasApi.toggle} onDropSubject={crearDesdeAsignatura} onMoveTask={moverTarea} />
@@ -433,6 +714,26 @@ export function CalendarPage() {
       </div>
       <nav className={`mobile-section-nav${menuMovil ? " open" : ""}`} aria-label="Secciones">
         <header><div className="mobile-drawer-brand"><span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="" /></span><span>CalendarAppio</span></div><button className="icon-btn" onClick={() => setMenuMovil(false)} aria-label="Cerrar menú"><Icon name="x" /></button></header>
+        <div className="mobile-drawer-search">
+          <Icon name="search" size={15} />
+          <input
+            type="text"
+            placeholder="Buscar..."
+            value={filtros.texto}
+            onChange={(e) => filtros.setTexto(e.target.value)}
+            aria-label="Buscar en la agenda"
+          />
+          {filtros.texto && (
+            <button
+              type="button"
+              className="mobile-search-clear"
+              onClick={() => filtros.setTexto("")}
+              aria-label="Limpiar búsqueda"
+            >
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </div>
         <div className="mobile-menu-links">
           <button className={seccion === "resumen" ? "on" : ""} onClick={() => { setSeccion("resumen"); setMenuMovil(false); }}><Icon name="book" />Resumen</button>
           <button className={seccion === "calendario" ? "on" : ""} onClick={() => { setSeccion("calendario"); setMenuMovil(false); }}><Icon name="calendar" />Calendario</button>
@@ -440,8 +741,22 @@ export function CalendarPage() {
           <button className={seccion === "recordatorios" ? "on" : ""} onClick={() => { setSeccion("recordatorios"); setMenuMovil(false); }}><Icon name="bell" />Recordatorios</button>
           <button className={seccion === "notas" ? "on" : ""} onClick={() => { setSeccion("notas"); setMenuMovil(false); }}><Icon name="note" />Bloc de notas</button>
           <button onClick={() => { abrirGestor({ tab: "asignaturas" }); setMenuMovil(false); }}><Icon name="book" />Categorías y secciones</button>
+          <button type="button" className="mobile-menu-share-btn" onClick={() => { void compartirApp(); setMenuMovil(false); }}><Icon name="share" />Compartir enlace</button>
         </div>
         <div className="mobile-menu-bottom">
+          <div className="mobile-drawer-extra">
+            <div className="mobile-drawer-sync-row">
+              <i className="synced-dot" />
+              <span>Sincronizado automáticamente</span>
+            </div>
+            <div className="mobile-drawer-theme-row">
+              <span className="mobile-drawer-theme-label">Tema</span>
+              <div className="theme-pill" aria-label="Apariencia">
+                <button aria-label="Modo claro" className={tema === "claro" ? "on" : ""} onClick={() => setTema("claro")}><Icon name="sun" size={14} /><span>Claro</span></button>
+                <button aria-label="Modo oscuro" className={tema === "oscuro" ? "on" : ""} onClick={() => setTema("oscuro")}><Icon name="moon" size={14} /><span>Oscuro</span></button>
+              </div>
+            </div>
+          </div>
           <div className="mobile-profile-card">
             <span className="user-avatar" style={{ background: perfil.color }}>{obtenerIniciales(perfil.nombre, perfil.email)}</span>
             <div>

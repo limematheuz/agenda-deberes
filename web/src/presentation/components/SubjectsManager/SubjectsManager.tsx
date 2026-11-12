@@ -234,6 +234,12 @@ export function SubjectsManager({
                     >
                       {esEditando && borradorAsig ? (
                         <div className="subject-editor-panel">
+                          <div className="subject-editor-top-preview">
+                            <span className="subject-live-preview" style={{ "--c": borradorAsig.color } as CSSProperties}>
+                              <i style={{ background: borradorAsig.color }} />
+                              <b>{borradorAsig.nombre.trim() || "Vista previa"}</b>
+                            </span>
+                          </div>
                           <div className="subject-editor-grid">
                             <label className="create-field">
                               <span>Nombre</span>
@@ -285,9 +291,11 @@ export function SubjectsManager({
                         </div>
                       ) : (
                         <div className="manager-item-row">
-                          <span className="subject-color-pill" style={{ background: a.color }} />
                           <div className="manager-item-info">
-                            <strong>{a.nombre}</strong>
+                            <span className="subject-item-badge" style={{ "--c": a.color } as CSSProperties}>
+                              <i style={{ background: a.color }} />
+                              <b>{a.nombre}</b>
+                            </span>
                             <span className="section-tag">{catActual?.nombre ?? "General"}</span>
                           </div>
                           <div className="manager-item-actions">

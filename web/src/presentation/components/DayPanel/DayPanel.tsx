@@ -139,7 +139,7 @@ export function DayPanel({ fecha, tareas, asignaturas, onAdd, onToggle, onUpdate
                   <span className="task-meta"><span><Icon name="calendar" size={14} />{fechaLarga(t.fecha)}</span>{t.hora && <span><Icon name="clock" size={14} />{t.hora.slice(0, 5)}</span>}</span>
                   <span className="chips">
                     <span className={`chip tipo-${t.tipo}`} style={{ "--task-tag": tipos.find((opcion) => opcion.value === t.tipo)?.color ?? "#98a2b3" } as CSSProperties}>{tipos.find((opcion) => opcion.value === t.tipo)?.label ?? tipoLabel(t.tipo)}</span>
-                    {a && <span className="chip"><i className="dot" style={{ background: a.color }} />{a.nombre}</span>}
+                    {a && <span className="chip category-chip" style={{ "--c": a.color } as CSSProperties}><i className="dot" style={{ background: a.color }} />{a.nombre}</span>}
                     {!t.hecha && <span className="when2">{describeDays(t.fecha)}</span>}
                   </span>
                 </div>

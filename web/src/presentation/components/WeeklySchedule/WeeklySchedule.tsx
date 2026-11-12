@@ -6,12 +6,12 @@ import { Dialog } from "../Dialog/Dialog";
 import { Icon } from "../Icon/Icon";
 import "./WeeklySchedule.css";
 
-const DIAS_LECTIVOS: ReadonlyArray<{ dia: number; nombre: string; corto: string }> = [
-  { dia: 1, nombre: "Lunes", corto: "Lun" },
-  { dia: 2, nombre: "Martes", corto: "Mar" },
-  { dia: 3, nombre: "Miércoles", corto: "Mié" },
-  { dia: 4, nombre: "Jueves", corto: "Jue" },
-  { dia: 5, nombre: "Viernes", corto: "Vie" },
+const DIAS_LECTIVOS: ReadonlyArray<{ dia: number; nombre: string; corto: string; inicial: string }> = [
+  { dia: 1, nombre: "Lunes", corto: "Lun", inicial: "L" },
+  { dia: 2, nombre: "Martes", corto: "Mar", inicial: "M" },
+  { dia: 3, nombre: "Miércoles", corto: "Mié", inicial: "X" },
+  { dia: 4, nombre: "Jueves", corto: "Jue", inicial: "J" },
+  { dia: 5, nombre: "Viernes", corto: "Vie", inicial: "V" },
 ];
 
 const HORAS_OPCIONES = Array.from({ length: 31 }, (_, i) => {
@@ -52,12 +52,9 @@ export function WeeklySchedule({
   const [color, setColor] = useState<string>(COLORES_PALETA_BASE[1]);
   const [aula, setAula] = useState("");
   const [errorForm, setErrorForm] = useState<string | null>(null);
-  const [diaMovil, setDiaMovil] = useState<number>(() => {
-    const hoy = new Date().getDay();
-    return hoy >= 1 && hoy <= 5 ? hoy : 1;
-  });
+  const [vistaExtendida, setVistaExtendida] = useState(false);
 
-  // Calculamos rango horario visible (mínimo 08:00 a 18:00, ampliable según los bloques)
+  // Rango horario escolar fijo de 08:00 a 18:00 (ampliable automáticamente si existen bloques fuera de ese rango)
   const minHora = Math.min(8, ...clases.map((c) => Math.floor(aMinutos(c.horaInicio) / 60)));
   const maxHora = Math.max(18, ...clases.map((c) => Math.ceil(aMinutos(c.horaFin) / 60)));
   const totalMediaHoras = (maxHora - minHora) * 2;
@@ -148,26 +145,35 @@ export function WeeklySchedule({
           <p>Organiza tu horario semanal fijo (trabajo, reuniones, deporte o rutinas). Pulsa en cualquier hueco para añadir todos los bloques que quieras.</p>
         </div>
         <div className="schedule-toolbar-actions">
-          <button type="button" className="primary schedule-add-btn" onClick={() => abrirNuevo(diaMovil, "09:00")}>
+          <div className="schedule-view-toggle" role="group" aria-label="Ajuste de pantalla">
+            <button
+              type="button"
+              className={!vistaExtendida ? "active" : ""}
+              onClick={() => setVistaExtendida(false)}
+              title="Ajustar los 5 días en pantalla completa sin scroll horizontal"
+            >
+              5 días en pantalla
+            </button>
+            <button
+              type="button"
+              className={vistaExtendida ? "active" : ""}
+              onClick={() => setVistaExtendida(true)}
+              title="Columnas anchas con desplazamiento horizontal"
+            >
+              Ampliado
+            </button>
+          </div>
+          <button type="button" className="primary schedule-add-btn" onClick={() => abrirNuevo(1, "09:00")}>
             <Icon name="plus" size={16} />
             <span>Añadir al horario</span>
           </button>
         </div>
       </div>
 
-      <div className="schedule-board">
-        <div className="schedule-mobile-days" aria-label="Día de la semana">
-          {DIAS_LECTIVOS.map((d) => (
-            <button key={d.dia} type="button" className={diaMovil === d.dia ? "on" : ""} onClick={() => setDiaMovil(d.dia)}>
-              <span>{d.corto}</span>
-              <small>{clases.filter((c) => c.diaSemana === d.dia).length} bloques</small>
-            </button>
-          ))}
-        </div>
-
+      <div className={`schedule-board${vistaExtendida ? " schedule-board-extended" : " schedule-board-fit"}`}>
         <div className="schedule-grid-wrap">
           <div className="schedule-time-axis" aria-hidden="true">
-            <div className="schedule-axis-head" />
+            <div className="schedule-axis-head">Hora</div>
             {etiquetasHoras.map((h) => <span key={h}>{h}</span>)}
           </div>
 
@@ -177,11 +183,12 @@ export function WeeklySchedule({
                 .filter((c) => c.diaSemana === d.dia)
                 .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
               return (
-                <div key={d.dia} className={`schedule-col${diaMovil === d.dia ? " mobile-active" : ""}`}>
+                <div key={d.dia} className="schedule-col">
                   <header className="schedule-col-head">
-                    <strong>{d.nombre}</strong>
+                    <strong className="col-day-full">{d.nombre}</strong>
+                    <strong className="col-day-short">{d.corto}</strong>
                     <button type="button" className="schedule-col-add" onClick={() => abrirNuevo(d.dia, "09:00")} title={`Añadir el ${d.nombre}`} aria-label={`Añadir el ${d.nombre}`}>
-                      <Icon name="plus" size={14} />
+                      <Icon name="plus" size={13} />
                     </button>
                   </header>
                   <div
@@ -190,7 +197,7 @@ export function WeeklySchedule({
                     onClick={(e) => {
                       if (e.target !== e.currentTarget) return;
                       const rect = e.currentTarget.getBoundingClientRect();
-                      const fila = Math.max(0, Math.min(totalMediaHoras - 2, Math.floor((e.clientY - rect.top) / 32)));
+                      const fila = Math.max(0, Math.min(totalMediaHoras - 2, Math.floor((e.clientY - rect.top) / 30)));
                       const totalMin = minHora * 60 + fila * 30;
                       const h = String(Math.floor(totalMin / 60)).padStart(2, "0");
                       const m = String(totalMin % 60).padStart(2, "0");
@@ -207,10 +214,11 @@ export function WeeklySchedule({
                           className="schedule-class-card"
                           style={{ ...estiloBloque(c), ...colorVar(colorBloque) }}
                           onClick={(e) => { e.stopPropagation(); abrirEdicion(c); }}
+                          title={`${nombreBloque} (${c.horaInicio} – ${c.horaFin})${c.aula ? ` · ${c.aula}` : ""}`}
                         >
-                          <span className="schedule-class-time">{c.horaInicio} – {c.horaFin}</span>
-                          <strong>{nombreBloque}</strong>
-                          {c.aula && <small>{c.aula}</small>}
+                          <span className="schedule-class-time">{c.horaInicio}–{c.horaFin}</span>
+                          <strong className="schedule-class-title">{nombreBloque}</strong>
+                          {c.aula && <small className="schedule-class-room">{c.aula}</small>}
                         </button>
                       );
                     })}
@@ -248,6 +256,7 @@ export function WeeklySchedule({
                     key={a.id}
                     type="button"
                     className={`schedule-chip${titulo.trim().toLowerCase() === a.nombre.toLowerCase() ? " active" : ""}`}
+                    style={{ "--c": a.color } as CSSProperties}
                     onClick={() => elegirSugerencia(a)}
                   >
                     <i style={{ background: a.color }} />

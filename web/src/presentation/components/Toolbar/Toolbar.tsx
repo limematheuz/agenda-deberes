@@ -1,6 +1,5 @@
 import type { Filtro } from "../../../domain/agenda";
 import type { Asignatura } from "../../../domain/entities";
-import { SearchBox } from "../SearchBox/SearchBox";
 import { Tabs } from "../Tabs/Tabs";
 import "./Toolbar.css";
 
@@ -10,11 +9,9 @@ interface Props {
   asignatura: string;
   onAsignatura: (id: string) => void;
   asignaturas: readonly Asignatura[];
-  texto: string;
-  onTexto: (s: string) => void;
 }
 
-export function Toolbar({ tipo, onTipo, asignatura, onAsignatura, asignaturas, texto, onTexto }: Props) {
+export function Toolbar({ tipo, onTipo, asignatura, onAsignatura, asignaturas }: Props) {
   return (
     <div className="toolbar">
       <Tabs value={tipo} onChange={onTipo} />
@@ -23,7 +20,6 @@ export function Toolbar({ tipo, onTipo, asignatura, onAsignatura, asignaturas, t
         {asignaturas.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
         <option value="ninguna">Sin categoría</option>
       </select>
-      <SearchBox value={texto} onChange={onTexto} />
     </div>
   );
 }
