@@ -4,10 +4,12 @@ import { webPushGateway } from "../infrastructure/push/web-push.gateway";
 import { supabaseAsignaturasRepository } from "../infrastructure/supabase/asignaturas.repository";
 import { supabaseAuthGateway } from "../infrastructure/supabase/auth.gateway";
 import { supabaseTareasRepository } from "../infrastructure/supabase/tareas.repository";
+import { supabaseUserDataGateway } from "../infrastructure/supabase/user-data.gateway";
 
 export const services: Services = {
   tareas: supabaseTareasRepository,
   asignaturas: supabaseAsignaturasRepository,
   auth: supabaseAuthGateway,
   push: webPushGateway,
+  userData: supabaseUserDataGateway,
 };

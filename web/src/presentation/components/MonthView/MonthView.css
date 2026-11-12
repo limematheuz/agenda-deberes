@@ -1,23 +1,139 @@
-/* Estilos propios de MonthView. Tokens y base viven en styles/. */
-.wkh { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; border-top: 1px solid var(--g200); border-bottom: 1px solid var(--g200); padding: 10px 0; font-size: 12px; font-weight: 600; color: var(--g500); }
-.mgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.cell { min-height: clamp(64px, 11vw, 124px); padding: 6px; border-right: 1px solid var(--g200); border-bottom: 1px solid var(--g200); display: flex; flex-direction: column; gap: 4px; cursor: pointer; min-width: 0; }
-.cell:nth-child(7n) { border-right: 0; }
-.cell.empty { background: var(--g50); cursor: default; }
-.cell:not(.empty):hover { background: var(--g25); }
-.cell.drag-over { background: rgba(91, 109, 227, .1); box-shadow: inset 0 0 0 2px rgba(91, 109, 227, .42); }
-.num { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 600; color: var(--g700); }
-.cell.today .num { background: var(--g950); color: #fff; }
-.pills { display: grid; gap: 3px; }
-.month-task { min-width: 0; cursor: grab; }.month-task:active { cursor: grabbing; }
-.cell em { font-size: 11px; color: var(--g500); font-style: normal; padding-left: 4px; }
-.dots { display: none; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: auto; }
-.dots i { width: 7px; height: 7px; border-radius: 50%; }
-.app:not(.dark) .wkh, .app:not(.dark) .cell { border-color: rgba(71, 84, 103, .18); }.app:not(.dark) .cell.empty { background: rgba(71, 84, 103, .035); }
+/* Estilos propios de MonthView inspirados en Shadcn UI Kit Calendar. */
+.month-calendar {
+  min-width: 0;
+}
+.wkh {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  border-bottom: 1px solid rgba(16, 24, 40, 0.09);
+  padding: 11px 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--g500);
+}
+.mgrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.cell {
+  min-height: clamp(86px, 11.5vw, 132px);
+  padding: 8px 8px 6px;
+  border-right: 1px solid rgba(16, 24, 40, 0.09);
+  border-bottom: 1px solid rgba(16, 24, 40, 0.09);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  min-width: 0;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+.cell:nth-child(7n) {
+  border-right: 0;
+}
+.cell:hover {
+  background: rgba(16, 24, 40, 0.02);
+}
+.cell.outside {
+  background: rgba(16, 24, 40, 0.014);
+}
+.cell.outside .num {
+  color: var(--g400);
+  font-weight: 500;
+}
+.cell.drag-over {
+  background: rgba(91, 109, 227, 0.09);
+  box-shadow: inset 0 0 0 2px rgba(91, 109, 227, 0.38);
+}
+.cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.num {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g800);
+}
+.cell.today .num {
+  background: #18181b;
+  color: #ffffff;
+}
+.pills {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+.month-task {
+  min-width: 0;
+  width: 100%;
+  cursor: grab;
+}
+.month-task:active {
+  cursor: grabbing;
+}
+.more-events {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--g500);
+  padding: 1px 6px;
+}
+.dots {
+  display: none;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: auto;
+}
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+:root[data-theme="oscuro"] .wkh,
+:root[data-theme="oscuro"] .cell {
+  border-color: rgba(255, 255, 255, 0.09);
+}
+:root[data-theme="oscuro"] .cell.outside {
+  background: rgba(255, 255, 255, 0.018);
+}
+:root[data-theme="oscuro"] .cell:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+:root[data-theme="oscuro"] .cell.today .num {
+  background: #f4f4f6;
+  color: #18181b;
+}
 @media (max-width: 720px) {
-  .pills, .cell em { display: none; }
-  .dots { display: flex; }
-  .wkh { padding: 13px 0 9px; font-size: 11px; }
-  .cell { padding: 5px 3px; align-items: center; min-height: 54px; }
-  .num { width: 29px; height: 29px; font-size: 13px; }
+  .pills {
+    display: none;
+  }
+  .dots {
+    display: flex;
+  }
+  .wkh {
+    padding: 10px 0;
+    font-size: 11px;
+  }
+  .cell {
+    padding: 6px 3px;
+    align-items: center;
+    min-height: 58px;
+  }
+  .cell-top {
+    justify-content: center;
+  }
+  .num {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
 }

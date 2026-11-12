@@ -4,7 +4,7 @@ import { CalendarPage } from "../presentation/pages/CalendarPage";
 
 export function App() {
   const { loading, loggedIn } = useAuth();
-  if (loading) return <main className="auth-page"><p className="muted">Cargando tu agenda…</p></main>;
+  if (loading) return <main className="auth-page"><p className="muted">Cargando CalendarAppio…</p></main>;
   if (!loggedIn) return <main className="auth-page"><AuthForm /></main>;
   return <CalendarPage />;
 }

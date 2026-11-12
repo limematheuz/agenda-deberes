@@ -5,6 +5,9 @@ export const supabaseAuthGateway: AuthGateway = {
   async haySesion() {
     return (await supabase.auth.getSession()).data.session !== null;
   },
+  async obtenerEmail() {
+    return (await supabase.auth.getSession()).data.session?.user?.email ?? null;
+  },
   onChange(cb) {
     const { data } = supabase.auth.onAuthStateChange((_event, s) => cb(s !== null));
     return () => data.subscription.unsubscribe();

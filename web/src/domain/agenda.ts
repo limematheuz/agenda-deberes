@@ -17,6 +17,9 @@ export function filtrarTareas(ts: readonly Tarea[], f: Filtros, nombreDe: (asign
     (t) =>
       (f.tipo === "todos" || t.tipo === f.tipo) &&
       (f.asignatura === "todas" || (f.asignatura === "ninguna" ? t.asignaturaId === null : t.asignaturaId === f.asignatura)) &&
-      (!s || t.titulo.toLowerCase().includes(s) || (t.asignaturaId !== null && nombreDe(t.asignaturaId).toLowerCase().includes(s))),
+      (!s ||
+        t.titulo.toLowerCase().includes(s) ||
+        (t.descripcion !== null && t.descripcion.toLowerCase().includes(s)) ||
+        (t.asignaturaId !== null && nombreDe(t.asignaturaId).toLowerCase().includes(s))),
   );
 }

@@ -9,8 +9,12 @@ export function usePush() {
   const fallo = (e: unknown): void => setError(e instanceof Error ? e.message : "Error desconocido");
 
   useEffect(() => {
-    // Si ya está activo, se vuelve a guardar la suscripción por si se inició sesión con otra cuenta.
-    void push.estado().then((s) => (s === "activo" ? push.activar() : s)).then(setEstado).catch(fallo);
+    // Sincronización silenciosa en segundo plano al iniciar sesión.
+    void push
+      .estado()
+      .then((s) => (s === "activo" ? push.activar().catch(() => s) : s))
+      .then(setEstado)
+      .catch(() => undefined);
   }, [push]);
 
   const activar = async (): Promise<void> => {

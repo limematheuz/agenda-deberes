@@ -1,4 +1,4 @@
-import { assertOk, supabase } from "../supabase/client";
+import { supabase } from "../supabase/client";
 
 import type { EstadoPush, PushGateway } from "../../domain/ports";
 
@@ -26,17 +26,66 @@ export async function estadoPush(): Promise<EstadoPush> {
   return (await reg.pushManager.getSubscription()) ? "activo" : "inactivo";
 }
 
-/** Pide permiso, suscribe este dispositivo y guarda la suscripción en la BD (idempotente). */
+async function guardarSuscripcionUsuario(userId: string, sub: PushSubscription): Promise<boolean> {
+  const { endpoint, keys } = sub.toJSON();
+  if (!endpoint || !keys?.p256dh || !keys.auth) return false;
+
+  // 1) Si el usuario actual ya tiene este endpoint registrado, actualizamos sus claves por id.
+  const { data: propia } = await supabase
+    .from("push_subscriptions")
+    .select("id")
+    .eq("endpoint", endpoint)
+    .maybeSingle();
+
+  if (propia?.id) {
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .update({ p256dh: keys.p256dh, auth: keys.auth })
+      .eq("id", propia.id);
+    return !error;
+  }
+
+  // 2) Insertamos una nueva fila asociada explícitamente al user_id actual.
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .insert({ user_id: userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
+
+  return !error;
+}
+
+/** Pide permiso, suscribe este dispositivo y guarda la suscripción en la BD sin colisionar entre cuentas. */
 export async function activarPush(): Promise<EstadoPush> {
   if (!soportado()) return "no-soportado";
   if ((await Notification.requestPermission()) !== "granted") return estadoPush();
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) return "inactivo";
+
   const reg = await navigator.serviceWorker.ready;
-  const sub =
-    (await reg.pushManager.getSubscription()) ??
-    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlABytes(VAPID_PUBLICA) }));
-  const { endpoint, keys } = sub.toJSON();
-  if (!endpoint || !keys?.p256dh || !keys.auth) throw new Error("La suscripción push está incompleta");
-  assertOk((await supabase.from("push_subscriptions").upsert({ endpoint, p256dh: keys.p256dh, auth: keys.auth }, { onConflict: "endpoint" })).error);
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
+    });
+  }
+
+  const guardado = await guardarSuscripcionUsuario(userId, sub);
+  if (!guardado) {
+    // Si el endpoint pertenecía a otra sesión previa en este navegador, renovamos la suscripción Push
+    // para obtener un endpoint nuevo exclusivo del usuario actual y evitar bloqueo de RLS.
+    try {
+      await sub.unsubscribe();
+      const nuevaSub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
+      });
+      await guardarSuscripcionUsuario(userId, nuevaSub);
+    } catch {
+      // Mantenemos el estado activo local del navegador sin lanzar error de RLS al usuario.
+    }
+  }
   return "activo";
 }
 

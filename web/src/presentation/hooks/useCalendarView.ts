@@ -5,9 +5,7 @@ import type { ISODate } from "../../domain/entities";
 
 /** Vista activa (mes/semana), fecha ancla y navegación entre periodos. */
 export function useCalendarView() {
-  // La vista semanal es la forma más útil de consultar los deberes al abrir
-  // la agenda, y mantiene disponible la vista mensual desde el selector.
-  const [vista, setVista] = useState<Vista>("semana");
+  const [vista, setVista] = useState<Vista>("mes");
   const [ancla, setAncla] = useState<ISODate>(todayISO());
   const a = fromISO(ancla);
   const inicio = vista === "mes" ? toISO(new Date(a.getFullYear(), a.getMonth(), 1)) : vista === "dia" ? ancla : lunesDe(ancla);

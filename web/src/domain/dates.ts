@@ -22,6 +22,26 @@ export function monthGrid(year: number, month: number): Array<ISODate | null> {
   ];
 }
 
+/** Rejilla completa de 35 o 42 casillas (incluye días previos y siguientes) al estilo Shadcn Calendar. */
+export function monthCalendarCells(year: number, month: number): Array<{ iso: ISODate; inMonth: boolean }> {
+  const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+  const total = new Date(year, month + 1, 0).getDate();
+  const prevTotal = new Date(year, month, 0).getDate();
+  const cells: Array<{ iso: ISODate; inMonth: boolean }> = [];
+  for (let i = lead - 1; i >= 0; i--) {
+    cells.push({ iso: toISO(new Date(year, month - 1, prevTotal - i)), inMonth: false });
+  }
+  for (let i = 1; i <= total; i++) {
+    cells.push({ iso: toISO(new Date(year, month, i)), inMonth: true });
+  }
+  const totalCells = cells.length <= 35 ? 35 : 42;
+  let nextDay = 1;
+  while (cells.length < totalCells) {
+    cells.push({ iso: toISO(new Date(year, month + 1, nextDay++)), inMonth: false });
+  }
+  return cells;
+}
+
 export const addDays = (s: ISODate, n: number): ISODate => {
   const d = fromISO(s);
   d.setDate(d.getDate() + n);

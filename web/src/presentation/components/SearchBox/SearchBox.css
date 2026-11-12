@@ -1,10 +1,15 @@
 /* Estilos propios de SearchBox. Tokens y base viven en styles/. */
-.search { display: flex; align-items: center; gap: 8px; width: min(100%, 260px); height: 40px; padding: 0 12px; border: 1px solid rgba(16,24,40,.16); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: 0 1px 2px rgba(16,24,40,.05), inset 0 1px rgba(255,255,255,.7); color: var(--g500); }
-.search:focus-within { border-color: var(--g400); box-shadow: 0 0 0 4px rgba(152, 162, 179, .2); }
-.search input { border: 0; box-shadow: none; height: 100%; padding: 0; flex: 1; min-width: 0; background: none; }
+.search-compact-btn { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border: 1px solid rgba(16,24,40,.15); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: 0 1px 2px rgba(16,24,40,.05), inset 0 1px rgba(255,255,255,.7); color: var(--g600); transition: background .15s ease, color .15s ease, transform .15s ease; }
+.search-compact-btn:hover { background: #fff; color: var(--g900); transform: translateY(-1px); }
+.search { display: flex; align-items: center; gap: 8px; width: min(100%, 230px); height: 38px; padding: 0 10px 0 11px; border: 1px solid rgba(16,24,40,.16); border-radius: 10px; background: rgba(255,255,255,.88); box-shadow: 0 1px 2px rgba(16,24,40,.05), inset 0 1px rgba(255,255,255,.7); color: var(--g500); animation: search-expand .14s ease-out; }
+.search:focus-within { border-color: var(--g400); box-shadow: 0 0 0 3px rgba(152, 162, 179, .18); }
+.search input { border: 0; box-shadow: none; height: 100%; padding: 0; flex: 1; min-width: 0; background: none; font-size: 13px; }
 .search input:focus { box-shadow: none; }
-kbd { font: 500 12px Inter, sans-serif; border: 1px solid var(--g200); border-radius: 6px; padding: 1px 6px; color: var(--g500); }
+.search-clear-btn { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--g500); }
+.search-clear-btn:hover { background: var(--g100); color: var(--g900); }
+:root[data-theme="oscuro"] .search-compact-btn { background: #29292d; border-color: rgba(255,255,255,.16); color: #e5e5ea; }
+:root[data-theme="oscuro"] .search-compact-btn:hover { background: #34343a; color: #fff; }
+@keyframes search-expand { from { opacity: .6; transform: scaleX(.92); transform-origin: right center; } to { opacity: 1; transform: scaleX(1); } }
 @media (max-width: 959px) {
-  .search kbd { display: none; }
   .search { width: 100%; }
 }

@@ -1,24 +1,115 @@
-/* Estilos propios de CalendarHeader. Tokens y base viven en styles/. */
-.calhead { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 21px 22px; border-bottom: 1px solid rgba(16,24,40,.1); }
-.heading { display: flex; gap: 16px; align-items: center; }
-.range { margin: 0; font-size: 13px; }
-.badge { width: 58px; flex: none; border: 1px solid rgba(16,24,40,.14); border-radius: 10px; overflow: hidden; text-align: center; box-shadow: 0 1px 2px rgba(16,24,40,.06); background: #fff; }
-.badge span { display: block; background: #f7f7f7; border-bottom: 1px solid var(--g200); font-size: 10px; font-weight: 700; color: var(--g500); text-transform: uppercase; padding: 3px 0; }
-.badge b { display: block; font-size: 20px; line-height: 29px; font-weight: 700; }
-.calctl { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.pager { display: inline-flex; border: 1px solid rgba(16,24,40,.16); border-radius: 9px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.05); background: #fff; }
-.pager button { height: 38px; padding: 0 14px; display: grid; place-items: center; font-weight: 600; color: var(--g700); }
-.pager button + button { border-left: 1px solid var(--g300); }
-.pager button:hover { background: var(--g50); }
-.viewsel { width: auto; font-weight: 600; color: var(--g700); border-color: rgba(16,24,40,.16); background: #fff; }
+/* Estilos propios de CalendarHeader inspirados en Shadcn UI Kit Calendar. */
+.calhead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(16, 24, 40, 0.09);
+}
+.calhead-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.calhead-today {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 24, 40, 0.14);
+  background: #ffffff;
+  color: var(--g800);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: background 0.14s ease;
+}
+.calhead-today:hover {
+  background: var(--g50);
+}
+.calhead-arrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.calhead-arrows button {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--g600);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.calhead-arrows button:hover {
+  background: var(--g50);
+  color: var(--g900);
+}
+.calhead-title {
+  margin: 0 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--g900);
+}
+.calctl {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.viewsel {
+  width: auto;
+  height: 36px;
+  padding: 0 12px;
+  line-height: 34px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g800);
+  border: 1px solid rgba(16, 24, 40, 0.14);
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.calhead-create {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+:root[data-theme="oscuro"] .calhead {
+  border-bottom-color: rgba(255, 255, 255, 0.09);
+}
+:root[data-theme="oscuro"] .calhead-today,
+:root[data-theme="oscuro"] .viewsel {
+  background-color: #1c1c21;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f4f4f6;
+}
 @media (max-width: 720px) {
-  .calhead { gap: 14px; padding: 16px 14px 14px; }
-  .heading { width: 100%; gap: 12px; }
-  .heading h2 { font-size: 20px; }
-  .range { font-size: 12px; }
-  .badge { width: 54px; }
-  .calctl { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; }
-  .calctl .viewsel { grid-column: 1; grid-row: 1; width: 100%; min-width: 0; }
-  .calctl .primary { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; padding-inline: 8px; }
-  .calctl .pager { grid-column: 1 / -1; grid-row: 2; width: 100%; }.pager button { flex: 1; padding-inline: 10px; }
+  .calhead {
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .calhead-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .calhead-title {
+    font-size: 17px;
+    margin-left: auto;
+  }
+  .calctl {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .calctl .viewsel,
+  .calctl .calhead-create {
+    width: 100%;
+    justify-content: center;
+  }
 }

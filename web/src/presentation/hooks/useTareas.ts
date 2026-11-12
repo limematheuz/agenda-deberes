@@ -24,7 +24,7 @@ export function useTareas() {
     }),
     update: (id: string, cambios: TareaEditable) => run(async () => {
       await repo.update(id, cambios);
-      setTareas((p) => p.map((x) => (x.id === id ? { ...x, ...cambios } : x)));
+      setTareas((p) => p.map((x) => (x.id === id ? { ...x, ...cambios, descripcion: cambios.descripcion === undefined ? x.descripcion : (cambios.descripcion?.trim() || null) } : x)));
     }),
     remove: (id: string) => run(async () => { await repo.remove(id); setTareas((p) => p.filter((x) => x.id !== id)); }),
   };

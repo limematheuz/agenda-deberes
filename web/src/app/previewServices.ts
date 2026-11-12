@@ -4,31 +4,33 @@ import type { Services } from "../domain/ports";
 
 /** Datos efímeros para revisar el diseño con ?preview=1 en desarrollo. */
 let asignaturas: Asignatura[] = [
-  { id: "mat", nombre: "Matemáticas", color: "#4f8bd6", orden: 0 },
-  { id: "his", nombre: "Historia", color: "#af5a92", orden: 1 },
-  { id: "ing", nombre: "Inglés", color: "#487bdb", orden: 2 },
-  { id: "bio", nombre: "Biología", color: "#3b9a73", orden: 3 },
+  { id: "mat", nombre: "Trabajo", color: "#3b82f6", orden: 0 },
+  { id: "his", nombre: "Personal", color: "#ec4899", orden: 1 },
+  { id: "ing", nombre: "Proyectos", color: "#a855f7", orden: 2 },
+  { id: "bio", nombre: "Salud y deporte", color: "#10b981", orden: 3 },
 ];
 const hoy = todayISO();
 let tareas: Tarea[] = [
-  { id: "1", titulo: "Problemas del tema 4", tipo: "ejercicio", fecha: hoy, hora: "09:00", hecha: false, asignaturaId: "mat" },
-  { id: "2", titulo: "Comentario de texto", tipo: "practica", fecha: hoy, hora: "10:30", hecha: false, asignaturaId: "his" },
-  { id: "3", titulo: "Repasar vocabulario", tipo: "ejercicio", fecha: addDays(hoy, 1), hora: "11:00", hecha: false, asignaturaId: "ing" },
-  { id: "4", titulo: "Preparar exposición", tipo: "practica", fecha: addDays(hoy, 2), hora: "12:00", hecha: false, asignaturaId: "bio" },
-  { id: "5", titulo: "Examen de álgebra", tipo: "examen", fecha: addDays(hoy, 3), hora: "13:30", hecha: false, asignaturaId: "mat" },
-  { id: "6", titulo: "Lectura semanal", tipo: "otro", fecha: addDays(hoy, 4), hora: "15:00", hecha: false, asignaturaId: "ing" },
+  { id: "1", titulo: "Revisión de propuesta trimestral", descripcion: "Documento compartido en https://drive.google.com/drive/folders/ejemplo", tipo: "ejercicio", fecha: hoy, hora: "09:00", hecha: false, asignaturaId: "mat" },
+  { id: "2", titulo: "Actualizar documentación del equipo", descripcion: "Subir documento compartido en https://docs.google.com/document/d/ejemplo", tipo: "practica", fecha: hoy, hora: "10:30", hecha: false, asignaturaId: "his" },
+  { id: "3", titulo: "Planificar objetivos de la semana", descripcion: null, tipo: "ejercicio", fecha: addDays(hoy, 1), hora: "11:00", hecha: false, asignaturaId: "ing" },
+  { id: "4", titulo: "Presentación de avance de proyecto", descripcion: null, tipo: "practica", fecha: addDays(hoy, 2), hora: "12:00", hecha: false, asignaturaId: "bio" },
+  { id: "5", titulo: "Entrega de informe mensual", descripcion: null, tipo: "examen", fecha: addDays(hoy, 3), hora: "13:30", hecha: false, asignaturaId: "mat" },
+  { id: "6", titulo: "Revisión semanal", descripcion: null, tipo: "otro", fecha: addDays(hoy, 4), hora: "15:00", hecha: false, asignaturaId: "ing" },
 ];
 
 export const previewServices: Services = {
   tareas: {
     list: async () => tareas,
     create: async (n: NuevaTarea) => {
-      const t = { ...n, id: crypto.randomUUID(), hecha: false };
+      const t: Tarea = { ...n, descripcion: n.descripcion?.trim() || null, id: crypto.randomUUID(), hecha: false };
       tareas = [...tareas, t];
       return t;
     },
     setDone: async (id, hecha) => { tareas = tareas.map((t) => t.id === id ? { ...t, hecha } : t); },
-    update: async (id: string, cambios: TareaEditable) => { tareas = tareas.map((t) => t.id === id ? { ...t, ...cambios } : t); },
+    update: async (id: string, cambios: TareaEditable) => {
+      tareas = tareas.map((t) => t.id === id ? { ...t, ...cambios, descripcion: cambios.descripcion === undefined ? t.descripcion : (cambios.descripcion?.trim() || null) } : t);
+    },
     remove: async (id) => { tareas = tareas.filter((t) => t.id !== id); },
   },
   asignaturas: {
@@ -42,6 +44,24 @@ export const previewServices: Services = {
     remove: async (id) => { asignaturas = asignaturas.filter((a) => a.id !== id); },
     reorder: async (ids) => { const porId = new Map(asignaturas.map((a) => [a.id, a])); asignaturas = ids.map((id, orden) => ({ ...porId.get(id)!, orden })); },
   },
-  auth: { haySesion: async () => true, onChange: () => () => undefined, signIn: async () => undefined, signUp: async () => true, signOut: async () => undefined },
+  auth: { haySesion: async () => true, obtenerEmail: async () => "usuario@calendarappio.com", onChange: () => () => undefined, signIn: async () => undefined, signUp: async () => true, signOut: async () => undefined },
   push: { estado: async () => "no-soportado", activar: async () => "no-soportado" },
+  userData: {
+    load: async () => {
+      try {
+        const raw = localStorage.getItem("agenda-cloud-state-cache");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    },
+    save: async (parcial) => {
+      try {
+        const prev = JSON.parse(localStorage.getItem("agenda-cloud-state-cache") ?? "{}");
+        localStorage.setItem("agenda-cloud-state-cache", JSON.stringify({ ...prev, ...parcial }));
+      } catch {
+        // ignore
+      }
+    },
+  },
 };

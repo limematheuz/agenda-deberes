@@ -15,7 +15,7 @@ export const supabaseAsignaturasRepository: AsignaturasRepository = {
   async create(n: NuevaAsignatura): Promise<Asignatura> {
     const { data, error } = await supabase.from("asignaturas").insert(n).select("*").single();
     assertOk(error);
-    if (!data) throw new Error("No se recibió la asignatura creada");
+    if (!data) throw new Error("No se recibió la categoría creada");
     return fromRow(data);
   },
   async update(id: string, cambios: Pick<Asignatura, "nombre" | "color">): Promise<void> {

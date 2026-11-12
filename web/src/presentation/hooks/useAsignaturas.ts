@@ -17,12 +17,17 @@ export function useAsignaturas() {
   return {
     asignaturas,
     error,
-    add: (n: NuevaAsignatura) => run(async () => {
-      const a = await repo.create(n);
-      const siguiente = [...asignaturas, a].map((asignatura, orden) => ({ ...asignatura, orden }));
-      await repo.reorder(siguiente.map((asignatura) => asignatura.id));
-      setAsignaturas(siguiente);
-    }),
+    add: async (n: NuevaAsignatura): Promise<Asignatura | void> => {
+      let creada: Asignatura | undefined;
+      await run(async () => {
+        const a = await repo.create(n);
+        creada = a;
+        const siguiente = [...asignaturas, a].map((asignatura, orden) => ({ ...asignatura, orden }));
+        await repo.reorder(siguiente.map((asignatura) => asignatura.id));
+        setAsignaturas(siguiente);
+      });
+      return creada;
+    },
     remove: (id: string) => run(async () => { await repo.remove(id); setAsignaturas((p) => p.filter((x) => x.id !== id)); }),
     update: (id: string, cambios: Pick<Asignatura, "nombre" | "color">) => run(async () => { await repo.update(id, cambios); setAsignaturas((p) => p.map((a) => a.id === id ? { ...a, ...cambios } : a)); }),
     reorder: (ids: readonly string[]) => {

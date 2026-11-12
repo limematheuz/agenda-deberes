@@ -1,0 +1,174 @@
+.reminders-workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
+.reminders-only-workspace, .notes-only-workspace { display: grid; gap: 20px; margin-top: 20px; max-width: 980px; }
+.reminders-column { display: grid; gap: 20px; min-width: 0; }
+.reminder-composer { display: grid; gap: 11px; padding: 18px; border: 1px solid rgba(16, 24, 40, 0.13); border-radius: 16px; background: rgba(255, 255, 255, 0.84); box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04), inset 0 1px rgba(255, 255, 255, 0.8); }
+.composer-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; }
+.composer-head strong { font-size: 15px; color: var(--g900); }
+.composer-head span { font-size: 12px; color: var(--g500); }
+.composer-title-input { font-weight: 650; }
+.composer-checklist { display: grid; gap: 7px; padding: 10px 12px; border: 1px dashed var(--g300); border-radius: 11px; background: rgba(248, 250, 252, 0.7); }
+.composer-sublabel { font-size: 11.5px; font-weight: 700; color: var(--g600); }
+.checklist-items-editor { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.checklist-items-editor li { display: flex; align-items: center; gap: 8px; }
+.checklist-items-editor input[type="checkbox"] { width: 16px; height: 16px; flex: none; }
+.checklist-items-editor input[type="text"] { height: 30px; padding: 0 8px; font-size: 12.5px; }
+.checklist-remove-btn { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; color: var(--g500); }
+.checklist-remove-btn:hover { background: var(--g200); color: var(--g900); }
+.checklist-add-row { display: flex; gap: 8px; }
+.checklist-add-row input { height: 34px; font-size: 12.5px; }
+.checklist-add-row .secondary { min-height: 34px; padding: 0 11px; border: 1px solid var(--g300); border-radius: 8px; background: #fff; color: var(--g700); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.composer-schedule-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 4px; }
+.schedule-quick-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.schedule-quick-chips button { min-height: 30px; padding: 0 10px; border: 1px solid var(--g200); border-radius: 999px; background: #fff; color: var(--g600); font-size: 12px; font-weight: 650; }
+.schedule-quick-chips button.on { border-color: var(--g900); background: var(--g900); color: #fff; }
+.schedule-datetime-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.reminder-date-field { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650; color: var(--g700); }
+.reminder-date-field input, .reminder-time-input { width: auto; height: 34px; padding: 0 8px; font-size: 12px; border-radius: 8px; }
+.reminder-time-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 650; color: var(--g600); cursor: pointer; }
+.reminder-time-toggle input { width: 15px; height: 15px; }
+.reminder-submit-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+
+.reminders-list-section { display: grid; gap: 12px; }
+.section-header-inline { display: flex; align-items: center; gap: 8px; }
+.section-header-inline h2 { font-size: 17px; margin: 0; }
+.pill-counter { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--g200); color: var(--g800); font-size: 12px; font-weight: 750; }
+.reminders-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.reminder-card { display: flex; align-items: flex-start; gap: 11px; padding: 14px; border: 1px solid rgba(16, 24, 40, 0.13); border-left: 4px solid #3f5d46; border-radius: 14px; background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); }
+.reminder-card.due-soon { border-left-color: #e06c4b; background: rgba(255, 251, 249, 0.92); }
+.reminder-card.done { opacity: 0.65; border-left-color: var(--g400); }
+.reminder-card.done .reminder-title { text-decoration: line-through; }
+.reminder-main-check { width: 18px; height: 18px; margin-top: 3px; flex: none; }
+.reminder-body, .reminder-edit-body { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.reminder-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.reminder-title { font-size: 15px; font-weight: 740; color: var(--g900); line-height: 1.3; }
+.reminder-actions { display: flex; gap: 6px; flex: none; }
+.reminder-note-text { margin: 0; font-size: 13px; color: var(--g700); white-space: pre-wrap; word-break: break-word; line-height: 1.42; }
+
+.reminder-live-checklist { display: grid; gap: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(16, 24, 40, 0.035); }
+.live-checklist-ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.live-checklist-ul li { display: flex; align-items: center; gap: 7px; }
+.live-checklist-ul li input[type="checkbox"] { width: 15px; height: 15px; flex: none; }
+.inline-check-input { border: 1px solid transparent !important; background: transparent !important; box-shadow: none !important; height: 26px !important; padding: 0 5px !important; font-size: 13px !important; color: var(--g800); }
+.inline-check-input:hover, .inline-check-input:focus { border-color: var(--g300) !important; background: rgba(255, 255, 255, 0.8) !important; }
+.live-checklist-ul li.checked .inline-check-input { text-decoration: line-through; color: var(--g500); }
+.inline-check-del { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; color: var(--g400); opacity: 0.7; }
+.inline-check-del:hover { background: rgba(16, 24, 40, 0.08); color: #c4320a; opacity: 1; }
+.inline-add-check { display: flex; align-items: center; gap: 6px; }
+.inline-add-check input { height: 28px; padding: 0 8px; border: 1px dashed var(--g300); border-radius: 7px; background: rgba(255, 255, 255, 0.65); font-size: 12px; }
+.inline-add-check button { height: 28px; padding: 0 10px; border-radius: 7px; background: var(--g900); color: #fff; font-size: 11.5px; font-weight: 700; }
+
+.reminder-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.reminder-alert-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: var(--g100); color: var(--g700); font-size: 11.5px; font-weight: 650; }
+.reminder-alert-badge.urgent { background: #fff1ed; color: #c4320a; border: 1px solid #fecdca; }
+.reminder-progress-badge { font-size: 11.5px; font-weight: 700; color: #067647; background: #ecfdf3; padding: 2px 8px; border-radius: 999px; }
+.reminder-edit-datetime { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.reminder-edit-datetime label { display: grid; gap: 4px; font-size: 12px; font-weight: 650; color: var(--g700); }
+.reminder-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.reminders-completed-group { margin-top: 8px; }
+.reminders-completed-group summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--g600); margin-bottom: 8px; }
+
+/* Bloc de notas escalable y con soporte de color tanto en modo claro como oscuro */
+.notepad-column { min-width: 0; }
+.notepad-panel { display: grid; gap: 14px; padding: 18px; border: 1px solid rgba(16, 24, 40, 0.13); border-radius: 18px; background: rgba(255, 255, 255, 0.78); box-shadow: 0 8px 24px rgba(60, 48, 37, 0.06), inset 0 1px rgba(255, 255, 255, 0.85); }
+.notepad-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.notepad-title-row { display: flex; align-items: center; gap: 8px; }
+.notepad-header h2 { margin: 0; font-size: 17px; color: var(--g900); }
+.notepad-saved-hint { display: block; margin-top: 2px; font-size: 11.5px; color: #067647; font-weight: 600; }
+.notepad-new-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 12.5px; white-space: nowrap; }
+.notepad-search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border: 1px solid var(--g200); border-radius: 10px; background: #fff; color: var(--g500); }
+.notepad-search input { border: 0; box-shadow: none; height: 100%; padding: 0; font-size: 12.5px; background: transparent; }
+.notepad-search button { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--g500); }
+
+.notepad-sheet { display: grid; gap: 10px; padding: 14px; border: 1.5px solid color-mix(in srgb, var(--note-bg, #eab308) 45%, rgba(16, 24, 40, 0.16)); border-left: 5px solid var(--note-bg, #eab308); border-radius: 14px; background: color-mix(in srgb, var(--note-bg, #eab308) 15%, #ffffff); box-shadow: 0 4px 14px rgba(16, 24, 40, 0.06); transition: background .2s ease, border-color .2s ease; }
+.notepad-sheet-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.notepad-editing-badge { font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; color: var(--g600); }
+.notepad-done-btn { padding: 4px 10px; border-radius: 999px; background: rgba(16, 24, 40, 0.08); color: var(--g800); font-size: 11.5px; font-weight: 700; }
+.notepad-done-btn:hover { background: rgba(16, 24, 40, 0.15); }
+.notepad-sheet-top { display: grid; gap: 8px; }
+.notepad-title-input { width: 100%; font-size: 15px; font-weight: 750; border-color: rgba(16, 24, 40, 0.14); background: rgba(255, 255, 255, 0.85); }
+.notepad-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.notepad-colors > button:not(.notepad-delete-btn) { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.75); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); transition: transform .12s ease; }
+.notepad-colors > button.selected { transform: scale(1.18); border-color: var(--g900); box-shadow: 0 0 0 2px #fff inset, 0 2px 5px rgba(0,0,0,.25); }
+.add-color-swatch { position: relative; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px dashed var(--g500); background: rgba(255, 255, 255, 0.8); color: var(--g800); font-size: 13px; font-weight: 800; cursor: pointer; }
+.add-color-swatch:hover { border-color: var(--g900); transform: scale(1.08); }
+.add-color-swatch input[type="color"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding: 0; border: 0; }
+.notepad-delete-btn { display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; border-radius: 7px; color: #c4320a; background: rgba(255, 255, 255, 0.72); }
+.notepad-delete-btn:hover { background: #fee4e2; }
+.notepad-textarea { width: 100%; min-height: 115px; padding: 10px 12px; border: 1px solid rgba(16, 24, 40, 0.14); border-radius: 11px; background: rgba(255, 255, 255, 0.82); color: var(--g900); font: inherit; font-size: 13.5px; line-height: 1.48; resize: vertical; }
+.notepad-links-preview { display: grid; gap: 4px; padding: 7px 10px; border-radius: 9px; background: rgba(255, 255, 255, 0.68); }
+.notepad-links-preview small { font-size: 11px; font-weight: 700; color: var(--g600); }
+.notepad-checklist { display: grid; gap: 7px; padding: 10px 12px; border: 1px solid rgba(16, 24, 40, 0.1); border-radius: 11px; background: rgba(255, 255, 255, 0.74); }
+.notepad-checklist-title { font-size: 11.5px; font-weight: 740; color: var(--g700); }
+
+/* Lista / Cuadrícula de todas las notas guardadas */
+.notepad-saved-section { display: grid; gap: 10px; padding-top: 4px; }
+.notepad-saved-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px; }
+.notepad-saved-header strong { font-size: 13.5px; color: var(--g800); }
+.notepad-saved-header span { font-size: 11.5px; color: var(--g500); }
+.notepad-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; padding: 4px; }
+.note-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 13px; border: 1.5px solid color-mix(in srgb, var(--note-bg, #eab308) 42%, rgba(16, 24, 40, 0.15)); border-left: 4px solid var(--note-bg, #eab308); background: color-mix(in srgb, var(--note-bg, #eab308) 14%, #ffffff); cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
+.note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(16, 24, 40, 0.08); }
+.note-card.active { box-shadow: 0 0 0 2px var(--g900); }
+.note-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.note-card-head strong { font-size: 13.5px; font-weight: 750; color: var(--g900); line-height: 1.25; }
+.note-card-actions { display: flex; gap: 4px; flex: none; }
+.note-card-btn { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: rgba(255, 255, 255, 0.65); color: var(--g700); }
+.note-card-btn:hover { background: #fff; color: var(--g900); }
+.note-card-btn.danger:hover { background: #fee4e2; color: #c4320a; }
+.note-card-checks { list-style: none; margin: 0; padding: 6px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.55); display: grid; gap: 4px; }
+.note-card-checks li { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--g800); }
+.note-card-checks li input { width: 14px; height: 14px; flex: none; }
+.note-card-checks li.checked span { text-decoration: line-through; color: var(--g500); }
+.note-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 4px; font-size: 11px; color: var(--g600); }
+.note-card-open-tag { padding: 1px 7px; border-radius: 999px; background: var(--g900); color: #fff; font-size: 10px; font-weight: 700; }
+
+/* Tema oscuro: los colores de nota y todos los controles se ven nítidos y contrastados */
+:root[data-theme="oscuro"] .reminder-composer, :root[data-theme="oscuro"] .reminder-card, :root[data-theme="oscuro"] .notepad-panel { background: #1a1a1f; border-color: rgba(255, 255, 255, 0.13); }
+:root[data-theme="oscuro"] .reminder-card.due-soon { background: #221b1a; border-left-color: #f97316; }
+:root[data-theme="oscuro"] .notepad-saved-hint { color: #6ce9a6; }
+:root[data-theme="oscuro"] .notepad-search { background: #26262c; border-color: rgba(255, 255, 255, 0.14); color: #f5f5f7; }
+:root[data-theme="oscuro"] .composer-checklist, :root[data-theme="oscuro"] .reminder-live-checklist { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.14); }
+:root[data-theme="oscuro"] .schedule-quick-chips button { background: #27272d; border-color: rgba(255, 255, 255, 0.16); color: #d1d1d6; }
+:root[data-theme="oscuro"] .schedule-quick-chips button.on { background: #f5f5f7; border-color: #f5f5f7; color: #18181b; }
+:root[data-theme="oscuro"] .reminder-date-field input,
+:root[data-theme="oscuro"] .reminder-time-input,
+:root[data-theme="oscuro"] .checklist-add-row input,
+:root[data-theme="oscuro"] .checklist-add-row .secondary,
+:root[data-theme="oscuro"] .inline-add-check input,
+:root[data-theme="oscuro"] .composer-title-input {
+  background: #27272d;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f5f5f7;
+  color-scheme: dark;
+}
+:root[data-theme="oscuro"] .inline-add-check button { background: #f5f5f7; color: #18181b; }
+:root[data-theme="oscuro"] .reminder-alert-badge { background: #27272d; color: #e4e4e7; }
+:root[data-theme="oscuro"] .reminder-alert-badge.urgent { background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+:root[data-theme="oscuro"] .reminder-progress-badge { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+:root[data-theme="oscuro"] .notepad-sheet {
+  background: color-mix(in srgb, var(--note-bg, #eab308) 26%, #18181d);
+  border-color: color-mix(in srgb, var(--note-bg, #eab308) 62%, rgba(255, 255, 255, 0.16));
+  border-left-color: var(--note-bg, #eab308);
+}
+:root[data-theme="oscuro"] .note-card {
+  background: color-mix(in srgb, var(--note-bg, #eab308) 24%, #18181d);
+  border-color: color-mix(in srgb, var(--note-bg, #eab308) 58%, rgba(255, 255, 255, 0.14));
+  border-left-color: var(--note-bg, #eab308);
+}
+:root[data-theme="oscuro"] .note-card.active { box-shadow: 0 0 0 2px #f5f5f7; }
+:root[data-theme="oscuro"] .notepad-done-btn { background: rgba(255, 255, 255, 0.14); color: #f5f5f7; }
+:root[data-theme="oscuro"] .notepad-title-input, :root[data-theme="oscuro"] .notepad-textarea, :root[data-theme="oscuro"] .notepad-checklist, :root[data-theme="oscuro"] .notepad-links-preview {
+  background: rgba(18, 18, 22, 0.62);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f5f5f7;
+}
+:root[data-theme="oscuro"] .note-card-checks, :root[data-theme="oscuro"] .note-card-btn, :root[data-theme="oscuro"] .add-color-swatch {
+  background: rgba(18, 18, 22, 0.58);
+  color: #f5f5f7;
+}
+:root[data-theme="oscuro"] .inline-check-input { color: #f5f5f7; }
+:root[data-theme="oscuro"] .inline-check-input:hover, :root[data-theme="oscuro"] .inline-check-input:focus { background: rgba(18, 18, 22, 0.65) !important; }
+
+@media (max-width: 959px) {
+  .reminders-workspace { grid-template-columns: 1fr; }
+}

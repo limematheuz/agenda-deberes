@@ -18,10 +18,10 @@ export function Toolbar({ tipo, onTipo, asignatura, onAsignatura, asignaturas, t
   return (
     <div className="toolbar">
       <Tabs value={tipo} onChange={onTipo} />
-      <select className="mfilter" value={asignatura} onChange={(e) => onAsignatura(e.target.value)} aria-label="Asignatura">
-        <option value="todas">Todas las asignaturas</option>
+      <select className="mfilter" value={asignatura} onChange={(e) => onAsignatura(e.target.value)} aria-label="Categoría">
+        <option value="todas">Todas las categorías</option>
         {asignaturas.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-        <option value="ninguna">Sin asignatura</option>
+        <option value="ninguna">Sin categoría</option>
       </select>
       <SearchBox value={texto} onChange={onTexto} />
     </div>

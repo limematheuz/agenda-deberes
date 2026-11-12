@@ -6,11 +6,11 @@ self.addEventListener("push", (event) => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch { /* payload no JSON */ }
   event.waitUntil(
-    self.registration.showNotification(d.title || "Agenda de deberes", {
+    self.registration.showNotification(d.title || "CalendarAppio", {
       body: d.body || "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: d.tag || "deberes",
+      tag: d.tag || "calendarappio",
       renotify: true,
       data: { url: d.url || "/" },
     }),

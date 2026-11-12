@@ -10,9 +10,9 @@ export type Database = {
         Relationships: [];
       };
       tareas: {
-        Row: { id: string; user_id: string; asignatura_id: string | null; titulo: string; tipo: string; fecha: string; hora: string | null; hecha: boolean; created_at: string };
-        Insert: { id?: string; user_id?: string; asignatura_id?: string | null; titulo: string; tipo?: string; fecha: string; hora?: string | null; hecha?: boolean; created_at?: string };
-        Update: { id?: string; user_id?: string; asignatura_id?: string | null; titulo?: string; tipo?: string; fecha?: string; hora?: string | null; hecha?: boolean; created_at?: string };
+        Row: { id: string; user_id: string; asignatura_id: string | null; titulo: string; descripcion: string | null; tipo: string; fecha: string; hora: string | null; hecha: boolean; created_at: string };
+        Insert: { id?: string; user_id?: string; asignatura_id?: string | null; titulo: string; descripcion?: string | null; tipo?: string; fecha: string; hora?: string | null; hecha?: boolean; created_at?: string };
+        Update: { id?: string; user_id?: string; asignatura_id?: string | null; titulo?: string; descripcion?: string | null; tipo?: string; fecha?: string; hora?: string | null; hecha?: boolean; created_at?: string };
         Relationships: [];
       };
       push_subscriptions: {
