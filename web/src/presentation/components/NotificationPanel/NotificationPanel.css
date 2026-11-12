@@ -167,3 +167,18 @@
 :root[data-theme="oscuro"] .notifications-panel li button:hover {
   background: #29292e;
 }
+
+@media (max-width: 768px) {
+  .notifications-panel {
+    position: fixed;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 78px);
+    overflow-y: auto;
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgba(16, 24, 40, 0.24);
+  }
+}

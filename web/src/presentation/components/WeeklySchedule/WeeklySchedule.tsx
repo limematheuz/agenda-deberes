@@ -14,8 +14,8 @@ const DIAS_LECTIVOS: ReadonlyArray<{ dia: number; nombre: string; corto: string;
   { dia: 5, nombre: "Viernes", corto: "Vie", inicial: "V" },
 ];
 
-const HORAS_OPCIONES = Array.from({ length: 31 }, (_, i) => {
-  const totalMin = 7 * 60 + i * 30; // 07:00 a 22:00
+const HORAS_OPCIONES = Array.from({ length: 61 }, (_, i) => {
+  const totalMin = 7 * 60 + i * 15; // 07:00 a 22:00 en intervalos de 15 minutos (00, 15, 30, 45)
   const h = String(Math.floor(totalMin / 60)).padStart(2, "0");
   const m = String(totalMin % 60).padStart(2, "0");
   return `${h}:${m}`;
@@ -57,7 +57,8 @@ export function WeeklySchedule({
   // Rango horario escolar fijo de 08:00 a 18:00 (ampliable automáticamente si existen bloques fuera de ese rango)
   const minHora = Math.min(8, ...clases.map((c) => Math.floor(aMinutos(c.horaInicio) / 60)));
   const maxHora = Math.max(18, ...clases.map((c) => Math.ceil(aMinutos(c.horaFin) / 60)));
-  const totalMediaHoras = (maxHora - minHora) * 2;
+  // Cada hora tiene 4 intervalos de 15 minutos (00, 15, 30, 45)
+  const totalFilas = (maxHora - minHora) * 4;
   const etiquetasHoras = Array.from({ length: maxHora - minHora }, (_, i) => `${String(minHora + i).padStart(2, "0")}:00`);
 
   const obtenerTituloClase = (c: ClaseSemanal): string => {
@@ -91,50 +92,162 @@ export function WeeklySchedule({
     setDiaSemana(c.diaSemana);
     setHoraInicio(c.horaInicio);
     setHoraFin(c.horaFin);
-    setTitulo(obtenerTituloClase(c));
-    setAsignaturaId(c.asignaturaId);
-    setColor(obtenerColorClase(c));
+    setTitulo(c.titulo ?? "");
+    setAsignaturaId(c.asignaturaId ?? "");
+    setColor(c.color ?? COLORES_PALETA_BASE[1]);
     setAula(c.aula ?? "");
     setErrorForm(null);
     setModalAbierto(true);
   };
 
-  const elegirSugerencia = (a: Asignatura): void => {
-    setTitulo(a.nombre);
-    setAsignaturaId(a.id);
-    setColor(a.color);
+  const elegirSugerencia = (asig: Asignatura): void => {
+    setAsignaturaId(asig.id);
+    setTitulo(asig.nombre);
+    setColor(asig.color);
   };
 
   const guardar = (e: FormEvent): void => {
     e.preventDefault();
-    const nombreLimpio = titulo.trim();
-    if (!nombreLimpio) {
-      setErrorForm("Escribe el nombre de la actividad o bloque.");
-      return;
-    }
-    if (aMinutos(horaFin) <= aMinutos(horaInicio)) {
+    const ini = aMinutos(horaInicio);
+    const fin = aMinutos(horaFin);
+    if (fin <= ini) {
       setErrorForm("La hora de fin debe ser posterior a la de inicio.");
       return;
     }
-    const coincidencia = asignaturas.find((a) => a.nombre.toLowerCase() === nombreLimpio.toLowerCase());
+    const tituloFinal = titulo.trim();
+    if (!tituloFinal && !asignaturaId) {
+      setErrorForm("Escribe un nombre o elige una categoría.");
+      return;
+    }
+    const coincidencia = asignaturas.find((a) => a.nombre.toLowerCase() === tituloFinal.toLowerCase());
     onGuardarClase(
       {
         diaSemana,
         horaInicio,
         horaFin,
+        titulo: tituloFinal || undefined,
         asignaturaId: coincidencia?.id ?? asignaturaId ?? "",
-        titulo: nombreLimpio,
         color,
-        aula: aula.trim() || null,
+        aula: aula.trim() || undefined,
       },
       editandoId ?? undefined,
     );
     setModalAbierto(false);
   };
 
+  const [arrastrandoClaseId, setArrastrandoClaseId] = useState<string | null>(null);
+  const [diaArrastradoSobre, setDiaArrastradoSobre] = useState<number | null>(null);
+
+  const buscarHuecoDuplicar = (
+    c: ClaseSemanal,
+  ): { dia: number; inicio: string; fin: string } => {
+    const duracionMin = aMinutos(c.horaFin) - aMinutos(c.horaInicio);
+    const inicioOrig = aMinutos(c.horaInicio);
+
+    // 1. Intentar los siguientes días lectivos (Martes, Miércoles, Jueves, Viernes, Lunes...) a la MISMA hora
+    for (let paso = 1; paso < 5; paso++) {
+      const targetDia = ((c.diaSemana - 1 + paso) % 5) + 1;
+      const solapa = clases.some((otra) => {
+        if (otra.id === c.id || otra.diaSemana !== targetDia) return false;
+        const oIni = aMinutos(otra.horaInicio);
+        const oFin = aMinutos(otra.horaFin);
+        return inicioOrig < oFin && inicioOrig + duracionMin > oIni;
+      });
+      if (!solapa) {
+        return { dia: targetDia, inicio: c.horaInicio, fin: c.horaFin };
+      }
+    }
+
+    // 2. Si a la misma hora todos los días están ocupados, buscar el primer hueco libre en el mismo día después del bloque
+    const targetDia = c.diaSemana;
+    let candidatoInicio = aMinutos(c.horaFin);
+    while (candidatoInicio + duracionMin <= 22 * 60) {
+      const solapa = clases.some((otra) => {
+        if (otra.diaSemana !== targetDia) return false;
+        const oIni = aMinutos(otra.horaInicio);
+        const oFin = aMinutos(otra.horaFin);
+        return candidatoInicio < oFin && candidatoInicio + duracionMin > oIni;
+      });
+      if (!solapa) {
+        const hIni = String(Math.floor(candidatoInicio / 60)).padStart(2, "0");
+        const mIni = String(candidatoInicio % 60).padStart(2, "0");
+        const finMin = candidatoInicio + duracionMin;
+        const hFin = String(Math.floor(finMin / 60)).padStart(2, "0");
+        const mFin = String(finMin % 60).padStart(2, "0");
+        return { dia: targetDia, inicio: `${hIni}:${mIni}`, fin: `${hFin}:${mFin}` };
+      }
+      candidatoInicio += 15;
+    }
+
+    // 3. Fallback: siguiente día a las 09:00
+    const siguienteDia = (c.diaSemana % 5) + 1;
+    const finMin = Math.min(22 * 60, 9 * 60 + duracionMin);
+    const hFin = String(Math.floor(finMin / 60)).padStart(2, "0");
+    const mFin = String(finMin % 60).padStart(2, "0");
+    return { dia: siguienteDia, inicio: "09:00", fin: `${hFin}:${mFin}` };
+  };
+
+  const duplicarClase = (id: string): void => {
+    const claseOriginal = clases.find((x) => x.id === id);
+    if (!claseOriginal) return;
+    const hueco = buscarHuecoDuplicar(claseOriginal);
+    onGuardarClase({
+      diaSemana: hueco.dia,
+      horaInicio: hueco.inicio,
+      horaFin: hueco.fin,
+      asignaturaId: claseOriginal.asignaturaId,
+      titulo: claseOriginal.titulo,
+      color: claseOriginal.color,
+      aula: claseOriginal.aula,
+    });
+    setModalAbierto(false);
+  };
+
+  const onDragStartClase = (e: React.DragEvent, id: string): void => {
+    setArrastrandoClaseId(id);
+    e.dataTransfer.setData("application/x-schedule-class", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDropClaseEnDia = (e: React.DragEvent<HTMLDivElement>, diaDestino: number): void => {
+    e.preventDefault();
+    setDiaArrastradoSobre(null);
+    const claseId = e.dataTransfer.getData("application/x-schedule-class") || arrastrandoClaseId;
+    if (!claseId) return;
+    const clase = clases.find((c) => c.id === claseId);
+    if (!clase) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetY = Math.max(0, e.clientY - rect.top);
+    const filaHeight = rect.height / totalFilas;
+    const filaIndex = Math.max(0, Math.min(totalFilas - 2, Math.floor(offsetY / filaHeight)));
+    const nuevoMinInicio = minHora * 60 + filaIndex * 15;
+    const duracionMin = aMinutos(clase.horaFin) - aMinutos(clase.horaInicio);
+    const nuevoMinFin = Math.min(22 * 60, nuevoMinInicio + duracionMin);
+
+    const hIni = String(Math.floor(nuevoMinInicio / 60)).padStart(2, "0");
+    const mIni = String(nuevoMinInicio % 60).padStart(2, "0");
+    const hFin = String(Math.floor(nuevoMinFin / 60)).padStart(2, "0");
+    const mFin = String(nuevoMinFin % 60).padStart(2, "0");
+
+    onGuardarClase(
+      {
+        diaSemana: diaDestino,
+        horaInicio: `${hIni}:${mIni}`,
+        horaFin: `${hFin}:${mFin}`,
+        asignaturaId: clase.asignaturaId,
+        titulo: clase.titulo,
+        color: clase.color,
+        aula: clase.aula,
+      },
+      clase.id,
+    );
+    setArrastrandoClaseId(null);
+  };
+
   const estiloBloque = (c: ClaseSemanal): CSSProperties => {
-    const filaInicio = Math.max(1, Math.floor((aMinutos(c.horaInicio) - minHora * 60) / 30) + 1);
-    const duracionFilas = Math.max(1, Math.round((aMinutos(c.horaFin) - aMinutos(c.horaInicio)) / 30));
+    const filaInicio = Math.max(1, Math.floor((aMinutos(c.horaInicio) - minHora * 60) / 15) + 1);
+    const duracionFilas = Math.max(1, Math.round((aMinutos(c.horaFin) - aMinutos(c.horaInicio)) / 15));
     return { gridRow: `${filaInicio} / span ${duracionFilas}` };
   };
 
@@ -192,13 +305,22 @@ export function WeeklySchedule({
                     </button>
                   </header>
                   <div
-                    className="schedule-col-body"
-                    style={{ "--rows": totalMediaHoras } as CSSProperties}
+                    className={`schedule-col-body${diaArrastradoSobre === d.dia ? " drag-over" : ""}`}
+                    style={{ "--rows": totalFilas } as CSSProperties}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (diaArrastradoSobre !== d.dia) setDiaArrastradoSobre(d.dia);
+                    }}
+                    onDragLeave={() => {
+                      if (diaArrastradoSobre === d.dia) setDiaArrastradoSobre(null);
+                    }}
+                    onDrop={(e) => onDropClaseEnDia(e, d.dia)}
                     onClick={(e) => {
                       if (e.target !== e.currentTarget) return;
                       const rect = e.currentTarget.getBoundingClientRect();
-                      const fila = Math.max(0, Math.min(totalMediaHoras - 2, Math.floor((e.clientY - rect.top) / 30)));
-                      const totalMin = minHora * 60 + fila * 30;
+                      const fila = Math.max(0, Math.min(totalFilas - 4, Math.floor((e.clientY - rect.top) / (rect.height / totalFilas))));
+                      const totalMin = minHora * 60 + fila * 15;
                       const h = String(Math.floor(totalMin / 60)).padStart(2, "0");
                       const m = String(totalMin % 60).padStart(2, "0");
                       abrirNuevo(d.dia, `${h}:${m}`);
@@ -211,10 +333,16 @@ export function WeeklySchedule({
                         <button
                           key={c.id}
                           type="button"
-                          className="schedule-class-card"
+                          draggable
+                          onDragStart={(e) => onDragStartClase(e, c.id)}
+                          onDragEnd={() => {
+                            setArrastrandoClaseId(null);
+                            setDiaArrastradoSobre(null);
+                          }}
+                          className={`schedule-class-card${arrastrandoClaseId === c.id ? " is-dragging" : ""}`}
                           style={{ ...estiloBloque(c), ...colorVar(colorBloque) }}
                           onClick={(e) => { e.stopPropagation(); abrirEdicion(c); }}
-                          title={`${nombreBloque} (${c.horaInicio} – ${c.horaFin})${c.aula ? ` · ${c.aula}` : ""}`}
+                          title={`${nombreBloque} (${c.horaInicio} – ${c.horaFin})${c.aula ? ` · ${c.aula}` : ""} — Arrastra para mover`}
                         >
                           <span className="schedule-class-time">{c.horaInicio}–{c.horaFin}</span>
                           <strong className="schedule-class-title">{nombreBloque}</strong>
@@ -295,21 +423,35 @@ export function WeeklySchedule({
             <input value={aula} onChange={(e) => setAula(e.target.value)} placeholder="Ej. Sala B · Oficina · Online" />
           </label>
           <div className="schedule-form-actions">
-            {editandoId && (
-              <button
-                type="button"
-                className="task-action remove"
-                onClick={() => {
-                  onBorrarClase(editandoId);
-                  setModalAbierto(false);
-                }}
-              >
-                <Icon name="trash" size={14} />Quitar bloque
-              </button>
-            )}
-            <div className="spacer" />
-            <button type="button" className="secondary" onClick={() => setModalAbierto(false)}>Cancelar</button>
-            <button type="submit" className="primary">Guardar en horario</button>
+            <div className="schedule-form-actions-left">
+              {editandoId && (
+                <>
+                  <button
+                    type="button"
+                    className="task-action remove"
+                    onClick={() => {
+                      onBorrarClase(editandoId);
+                      setModalAbierto(false);
+                    }}
+                    title="Eliminar este bloque del horario"
+                  >
+                    <Icon name="trash" size={14} />Quitar bloque
+                  </button>
+                  <button
+                    type="button"
+                    className="task-action duplicate-btn"
+                    onClick={() => duplicarClase(editandoId)}
+                    title="Duplicar bloque en otro día u hora libre"
+                  >
+                    <Icon name="plus" size={14} />Duplicar
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="schedule-form-actions-right">
+              <button type="button" className="secondary" onClick={() => setModalAbierto(false)}>Cancelar</button>
+              <button type="submit" className="primary">Guardar</button>
+            </div>
           </div>
         </form>
       </Dialog>

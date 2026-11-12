@@ -13,13 +13,14 @@ interface Props {
   onSelectDay: (d: ISODate) => void;
   onToggle: (t: Tarea) => void;
   onDropSubject: (d: ISODate, asignaturaId: string) => void;
+  onDropScheduleClass?: (d: ISODate, claseId: string) => void;
   onMoveTask: (id: string, fecha: ISODate) => void;
 }
 
 const SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MAX_VISIBLE_PILLS = 3;
 
-export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onToggle, onDropSubject, onMoveTask }: Props) {
+export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onToggle, onDropSubject, onDropScheduleClass, onMoveTask }: Props) {
   const porDia = useMemo(() => agruparPorDia(tareas), [tareas]);
   const hoy = todayISO();
   const [sobre, setSobre] = useState<ISODate | null>(null);
@@ -50,7 +51,9 @@ export function MonthView({ year, month, tareas, asignaturas, onSelectDay, onTog
                 setSobre(null);
                 const asignaturaId = e.dataTransfer.getData("application/x-agenda-subject");
                 const tareaId = e.dataTransfer.getData("application/x-agenda-task");
+                const claseId = e.dataTransfer.getData("application/x-schedule-class");
                 if (asignaturaId) onDropSubject(d, asignaturaId);
+                if (claseId && onDropScheduleClass) onDropScheduleClass(d, claseId);
                 if (tareaId) onMoveTask(tareaId, d);
               }}
             >

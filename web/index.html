@@ -28,6 +28,20 @@
   <meta name="twitter:description" content="Tu agenda inteligente: calendario interactivo, cuadrícula de horario de 08:00 a 18:00, recordatorios y bloc de notas sincronizados.">
   <meta name="twitter:image" content="/brand/calendarappio-share.png">
 
+  <script>
+    (function() {
+      try {
+        var base = window.location.origin;
+        var ogImg = document.querySelector('meta[property="og:image"]');
+        var ogSec = document.querySelector('meta[property="og:image:secure_url"]');
+        var twImg = document.querySelector('meta[name="twitter:image"]');
+        if (ogImg && ogImg.content && !ogImg.content.startsWith('http')) ogImg.content = base + ogImg.getAttribute('content');
+        if (ogSec && ogSec.content && !ogSec.content.startsWith('http')) ogSec.content = base + ogSec.getAttribute('content');
+        if (twImg && twImg.content && !twImg.content.startsWith('http')) twImg.content = base + twImg.getAttribute('content');
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Iconos y PWA -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=3">

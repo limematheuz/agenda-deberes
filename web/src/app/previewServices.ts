@@ -9,6 +9,8 @@ let asignaturas: Asignatura[] = [
   { id: "ing", nombre: "Proyectos", color: "#a855f7", orden: 2 },
   { id: "bio", nombre: "Salud y deporte", color: "#10b981", orden: 3 },
 ];
+let sesionActiva = true;
+const authListeners = new Set<(s: boolean) => void>();
 const hoy = todayISO();
 let tareas: Tarea[] = [
   { id: "1", titulo: "Revisión de propuesta trimestral", descripcion: "Documento compartido en https://drive.google.com/drive/folders/ejemplo", tipo: "ejercicio", fecha: hoy, hora: "09:00", hecha: false, asignaturaId: "mat" },
@@ -44,7 +46,27 @@ export const previewServices: Services = {
     remove: async (id) => { asignaturas = asignaturas.filter((a) => a.id !== id); },
     reorder: async (ids) => { const porId = new Map(asignaturas.map((a) => [a.id, a])); asignaturas = ids.map((id, orden) => ({ ...porId.get(id)!, orden })); },
   },
-  auth: { haySesion: async () => true, obtenerEmail: async () => "usuario@calendarappio.com", onChange: () => () => undefined, signIn: async () => undefined, signUp: async () => true, signOut: async () => undefined },
+  auth: {
+    haySesion: async () => sesionActiva,
+    obtenerEmail: async () => (sesionActiva ? "estudiante@agenda.es" : null),
+    onChange: (cb) => {
+      authListeners.add(cb);
+      return () => authListeners.delete(cb);
+    },
+    signIn: async () => {
+      sesionActiva = true;
+      authListeners.forEach((cb) => cb(true));
+    },
+    signUp: async () => {
+      sesionActiva = true;
+      authListeners.forEach((cb) => cb(true));
+      return true;
+    },
+    signOut: async () => {
+      sesionActiva = false;
+      authListeners.forEach((cb) => cb(false));
+    },
+  },
   push: { estado: async () => "no-soportado", activar: async () => "no-soportado" },
   userData: {
     load: async () => {

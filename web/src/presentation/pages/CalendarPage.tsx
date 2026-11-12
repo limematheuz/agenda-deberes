@@ -294,7 +294,36 @@ export function CalendarPage() {
 
   useUrgencyBadge(tareasApi.tareas);
 
-  const salir = (): void => void auth.signOut();
+  useEffect(() => {
+    if (!menuMovil) return;
+    const scrollY = window.scrollY;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+    const prevOverflow = document.body.style.overflow;
+
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      document.body.style.overflow = prevOverflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [menuMovil]);
+
+  const salir = async (): Promise<void> => {
+    setMenuMovil(false);
+    try {
+      await auth.signOut();
+    } catch {
+      // Ignorar
+    }
+  };
   const error = tareasApi.error ?? asigApi.error ?? push.error;
   useEffect(() => { if (error) setToast({ mensaje: error, tipo: "error" }); }, [error]);
   const abrirDia = (fecha: ISODate, asignaturaId: string | null = null): void => { setAsignaturaInicial(asignaturaId); setDia(fecha); };
@@ -307,6 +336,21 @@ export function CalendarPage() {
     const asignatura = mapa.get(asignaturaId);
     void tareasApi.add({ titulo: `Tarea de ${asignatura?.nombre ?? "categoría"}`, tipo: "otro", fecha, hora, asignaturaId });
     setToast({ mensaje: `Tarea creada${hora ? ` a las ${hora}` : ""}. Puedes editarla al pulsarla.`, tipo: "exito" });
+  };
+  const crearDesdeBloqueHorario = (fecha: ISODate, claseId: string, hora?: string | null): void => {
+    const clase = clasesSemanales.find((c) => c.id === claseId);
+    if (!clase) return;
+    const asig = clase.asignaturaId ? mapa.get(clase.asignaturaId) : null;
+    const nombre = clase.titulo?.trim() || asig?.nombre || "Bloque horario";
+    void tareasApi.add({
+      titulo: nombre,
+      descripcion: clase.aula ? `Ubicación: ${clase.aula}` : null,
+      tipo: "otro",
+      fecha,
+      hora: hora || clase.horaInicio,
+      asignaturaId: clase.asignaturaId || null,
+    });
+    setToast({ mensaje: `Bloque "${nombre}" añadido al calendario.`, tipo: "exito" });
   };
   const crearCategoriaRapida = (nombre: string): string => {
     const id = `categoria-${Date.now()}`;
@@ -335,14 +379,32 @@ export function CalendarPage() {
 
   const compartirApp = async (): Promise<void> => {
     const url = window.location.origin;
-    const datos = {
+    const datosBase = {
       title: "CalendarAppio",
       text: "Organiza tu calendario, horario semanal, recordatorios y bloc de notas con CalendarAppio.",
       url,
     };
     if (navigator.share) {
       try {
-        await navigator.share(datos);
+        try {
+          const resp = await fetch("/brand/calendarappio-share.png");
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const archivoLogo = new File([blob], "calendarappio.png", { type: "image/png" });
+            if (navigator.canShare && navigator.canShare({ files: [archivoLogo] })) {
+              await navigator.share({
+                ...datosBase,
+                files: [archivoLogo],
+              });
+              setToast({ mensaje: "Enlace y tarjeta compartidos.", tipo: "exito" });
+              return;
+            }
+          }
+        } catch {
+          // Fallback a compartir texto normal
+        }
+
+        await navigator.share(datosBase);
         setToast({ mensaje: "Enlace compartido.", tipo: "exito" });
       } catch {
         // Cancelado por el usuario
@@ -703,71 +765,226 @@ export function CalendarPage() {
           />
         ) : <>
           <Toolbar tipo={filtros.tipo} onTipo={filtros.setTipo} asignatura={filtros.asignatura} onAsignatura={filtros.setAsignatura} asignaturas={asigApi.asignaturas} />
-          <section className="mobile-subject-tray" aria-label="Categorías disponibles"><div><b>Categorías</b><span>Toca una para crear una tarea; en escritorio también puedes arrastrarla.</span></div><div className="mobile-subjects">{asigApi.asignaturas.map((asignatura) => <button key={asignatura.id} className="cat-badge-btn" style={{ "--c": asignatura.color } as CSSProperties} draggable onDragStart={(e) => { e.dataTransfer.setData("application/x-agenda-subject", asignatura.id); e.dataTransfer.effectAllowed = "copy"; }} onClick={() => abrirDia(todayISO(), asignatura.id)}><i style={{ background: asignatura.color }} />{asignatura.nombre}</button>)}</div></section><section className="cal">
+          <section className="mobile-subject-tray" aria-label="Categorías disponibles">
+            <div className="mobile-tray-head">
+              <div>
+                <b>Categorías</b>
+                <span>Toca una para crear una tarea</span>
+              </div>
+              <button
+                type="button"
+                className="mobile-tray-add-btn"
+                onClick={() => abrirGestor({ tab: "asignaturas" })}
+                title="Crear nueva categoría"
+              >
+                <Icon name="plus" size={12} />Nueva
+              </button>
+            </div>
+            <div className="mobile-subjects">
+              {asigApi.asignaturas.map((asignatura) => (
+                <button
+                  key={asignatura.id}
+                  className="cat-badge-btn"
+                  style={{ "--c": asignatura.color } as CSSProperties}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("application/x-agenda-subject", asignatura.id);
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  onClick={() => abrirDia(todayISO(), asignatura.id)}
+                >
+                  <i style={{ background: asignatura.color }} />
+                  {asignatura.nombre}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="cat-badge-btn cat-badge-add-btn"
+                onClick={() => abrirGestor({ tab: "asignaturas" })}
+                title="Crear nueva categoría"
+              >
+                <Icon name="plus" size={12} />
+                <span>Añadir</span>
+              </button>
+            </div>
+          </section>
+          <section className="cal">
             <CalendarHeader titulo={cal.titulo} inicio={cal.inicio} fin={cal.fin} vista={cal.vista} onVista={cal.setVista} onMover={cal.mover} onHoy={cal.irAHoy} onAnadir={() => abrirDia(todayISO())} />
             {cal.vista === "mes"
-              ? <MonthView year={cal.year} month={cal.month} tareas={filtros.visibles} asignaturas={mapa} onSelectDay={abrirDia} onToggle={tareasApi.toggle} onDropSubject={crearDesdeAsignatura} onMoveTask={moverTarea} />
-              : <WeekView inicio={cal.inicio} dias={cal.vista === "dia" ? 1 : 7} tareas={filtros.visibles} asignaturas={mapa} onSelectDay={abrirDia} onToggle={tareasApi.toggle} onDropSubject={crearDesdeAsignatura} onMoveTask={moverTarea} />}
+              ? <MonthView year={cal.year} month={cal.month} tareas={filtros.visibles} asignaturas={mapa} onSelectDay={abrirDia} onToggle={tareasApi.toggle} onDropSubject={crearDesdeAsignatura} onDropScheduleClass={crearDesdeBloqueHorario} onMoveTask={moverTarea} />
+              : <WeekView inicio={cal.inicio} dias={cal.vista === "dia" ? 1 : 7} tareas={filtros.visibles} asignaturas={mapa} onSelectDay={abrirDia} onToggle={tareasApi.toggle} onDropSubject={crearDesdeAsignatura} onDropScheduleClass={crearDesdeBloqueHorario} onMoveTask={moverTarea} />}
           </section>
         </>}
       </main>
       </div>
-      <nav className={`mobile-section-nav${menuMovil ? " open" : ""}`} aria-label="Secciones">
-        <header><div className="mobile-drawer-brand"><span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="" /></span><span>CalendarAppio</span></div><button className="icon-btn" onClick={() => setMenuMovil(false)} aria-label="Cerrar menú"><Icon name="x" /></button></header>
-        <div className="mobile-drawer-search">
-          <Icon name="search" size={15} />
-          <input
-            type="text"
-            placeholder="Buscar..."
-            value={filtros.texto}
-            onChange={(e) => filtros.setTexto(e.target.value)}
-            aria-label="Buscar en la agenda"
-          />
-          {filtros.texto && (
-            <button
-              type="button"
-              className="mobile-search-clear"
-              onClick={() => filtros.setTexto("")}
-              aria-label="Limpiar búsqueda"
-            >
-              <Icon name="x" size={12} />
-            </button>
-          )}
-        </div>
-        <div className="mobile-menu-links">
-          <button className={seccion === "resumen" ? "on" : ""} onClick={() => { setSeccion("resumen"); setMenuMovil(false); }}><Icon name="book" />Resumen</button>
-          <button className={seccion === "calendario" ? "on" : ""} onClick={() => { setSeccion("calendario"); setMenuMovil(false); }}><Icon name="calendar" />Calendario</button>
-          <button className={seccion === "horario" ? "on" : ""} onClick={() => { setSeccion("horario"); setMenuMovil(false); }}><Icon name="clock" />Horario semanal</button>
-          <button className={seccion === "recordatorios" ? "on" : ""} onClick={() => { setSeccion("recordatorios"); setMenuMovil(false); }}><Icon name="bell" />Recordatorios</button>
-          <button className={seccion === "notas" ? "on" : ""} onClick={() => { setSeccion("notas"); setMenuMovil(false); }}><Icon name="note" />Bloc de notas</button>
-          <button onClick={() => { abrirGestor({ tab: "asignaturas" }); setMenuMovil(false); }}><Icon name="book" />Categorías y secciones</button>
-          <button type="button" className="mobile-menu-share-btn" onClick={() => { void compartirApp(); setMenuMovil(false); }}><Icon name="share" />Compartir enlace</button>
-        </div>
-        <div className="mobile-menu-bottom">
-          <div className="mobile-drawer-extra">
-            <div className="mobile-drawer-sync-row">
-              <i className="synced-dot" />
-              <span>Sincronizado automáticamente</span>
+      <nav className={`mobile-section-nav${menuMovil ? " open" : ""}`} aria-label="Navegación móvil">
+        <header className="mobile-drawer-header">
+          <div className="mobile-drawer-brand">
+            <span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="" /></span>
+            <span>CalendarAppio</span>
+          </div>
+          <button type="button" className="icon-btn mobile-drawer-close" onClick={() => setMenuMovil(false)} aria-label="Cerrar menú">
+            <Icon name="x" />
+          </button>
+        </header>
+
+        <div className="mobile-drawer-scroll">
+          <div className="mobile-drawer-search">
+            <Icon name="search" size={15} />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={filtros.texto}
+              onChange={(e) => filtros.setTexto(e.target.value)}
+              aria-label="Buscar en la agenda"
+            />
+            {filtros.texto && (
+              <button
+                type="button"
+                className="mobile-search-clear"
+                onClick={() => filtros.setTexto("")}
+                aria-label="Limpiar búsqueda"
+              >
+                <Icon name="x" size={12} />
+              </button>
+            )}
+          </div>
+
+          <div className="mobile-menu-links">
+            <button type="button" className={seccion === "resumen" ? "on" : ""} onClick={() => { setSeccion("resumen"); setMenuMovil(false); }}><Icon name="book" />Resumen</button>
+            <button type="button" className={seccion === "calendario" ? "on" : ""} onClick={() => { setSeccion("calendario"); setMenuMovil(false); }}><Icon name="calendar" />Calendario</button>
+            <button type="button" className={seccion === "horario" ? "on" : ""} onClick={() => { setSeccion("horario"); setMenuMovil(false); }}><Icon name="clock" />Horario semanal</button>
+            <button type="button" className={seccion === "recordatorios" ? "on" : ""} onClick={() => { setSeccion("recordatorios"); setMenuMovil(false); }}><Icon name="bell" />Recordatorios</button>
+            <button type="button" className={seccion === "notas" ? "on" : ""} onClick={() => { setSeccion("notas"); setMenuMovil(false); }}><Icon name="note" />Bloc de notas</button>
+            <button type="button" className="mobile-menu-share-btn" onClick={() => { void compartirApp(); setMenuMovil(false); }}><Icon name="share" />Compartir enlace</button>
+          </div>
+
+          <hr className="mobile-drawer-divider" />
+
+          {/* Categorías y Secciones adaptadas con el diseño limpio de Desktop */}
+          <div className="mobile-drawer-sections-block">
+            <div className="mobile-quick-actions">
+              <button
+                type="button"
+                className="quick-create-pill primary-tint"
+                onClick={() => { abrirGestor({ tab: "asignaturas" }); setMenuMovil(false); }}
+              >
+                <Icon name="plus" size={13} />
+                <span>Categoría</span>
+              </button>
+              <button
+                type="button"
+                className="quick-create-pill"
+                onClick={() => { abrirGestor({ tab: "secciones" }); setMenuMovil(false); }}
+              >
+                <Icon name="plus" size={13} />
+                <span>Sección</span>
+              </button>
             </div>
-            <div className="mobile-drawer-theme-row">
-              <span className="mobile-drawer-theme-label">Tema</span>
-              <div className="theme-pill" aria-label="Apariencia">
-                <button aria-label="Modo claro" className={tema === "claro" ? "on" : ""} onClick={() => setTema("claro")}><Icon name="sun" size={14} /><span>Claro</span></button>
-                <button aria-label="Modo oscuro" className={tema === "oscuro" ? "on" : ""} onClick={() => setTema("oscuro")}><Icon name="moon" size={14} /><span>Oscuro</span></button>
-              </div>
+
+            <div className="mobile-drawer-sections-head">
+              <span className="group-title">SECCIONES</span>
+              <button
+                type="button"
+                className="mobile-drawer-manage-btn"
+                onClick={() => { abrirGestor({ tab: "secciones" }); setMenuMovil(false); }}
+                title="Gestionar secciones y categorías"
+                aria-label="Gestionar secciones y categorías"
+              >
+                <Icon name="sliders" size={14} />
+              </button>
+            </div>
+
+            <div className="mobile-drawer-sections-tree">
+              {categorias.map((cat) => {
+                const items = asigApi.asignaturas.filter((a) => (categoriaPorAsignatura[a.id] ?? "general") === cat.id);
+                const abierta = cat.abierta ?? true;
+                return (
+                  <div key={cat.id} className="mobile-section-group">
+                    <div className="mobile-section-row">
+                      <button
+                        type="button"
+                        className="mobile-section-toggle"
+                        onClick={() => {
+                          setCategorias((prev) =>
+                            prev.map((c) => (c.id === cat.id ? { ...c, abierta: !c.abierta } : c))
+                          );
+                        }}
+                      >
+                        <Icon name={abierta ? "chevron-down" : "chevron-right"} size={13} />
+                        <span className="mobile-section-name">{cat.nombre}</span>
+                        {items.length > 0 && <span className="mobile-section-count">{items.length}</span>}
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile-section-add-btn"
+                        onClick={() => {
+                          abrirGestor({ tab: "asignaturas", seccionId: cat.id });
+                          setMenuMovil(false);
+                        }}
+                        title={`Añadir categoría en ${cat.nombre}`}
+                        aria-label={`Añadir categoría en ${cat.nombre}`}
+                      >
+                        <Icon name="plus" size={12} />
+                      </button>
+                    </div>
+
+                    {abierta && (
+                      <div className="mobile-sub-list">
+                        {items.map((a) => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            className={`mobile-sub-item${filtros.asignatura === a.id ? " on" : ""}`}
+                            onClick={() => {
+                              filtros.setAsignatura(filtros.asignatura === a.id ? "todas" : a.id);
+                              setSeccion("calendario");
+                              setMenuMovil(false);
+                            }}
+                          >
+                            <i className="dot" style={{ background: a.color }} />
+                            <span className="sub-name">{a.nombre}</span>
+                          </button>
+                        ))}
+                        {items.length === 0 && (
+                          <span className="mobile-empty-sec">Sin categorías</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <div className="mobile-profile-card">
-            <span className="user-avatar" style={{ background: perfil.color }}>{obtenerIniciales(perfil.nombre, perfil.email)}</span>
-            <div>
-              <div className="user-name-row">
-                <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
-                <span className="user-course-badge">{/^(CFGS|Mi curso)/i.test(perfil.curso.trim()) ? "Personal" : (perfil.curso.trim() || "Personal")}</span>
+
+          <hr className="mobile-drawer-divider" />
+
+          <div className="mobile-menu-bottom">
+            <div className="mobile-drawer-extra">
+              <div className="mobile-drawer-sync-row">
+                <i className="synced-dot" />
+                <span>Sincronizado automáticamente</span>
               </div>
-              <small>{perfil.email || "Mi cuenta"}</small>
+              <div className="mobile-drawer-theme-row">
+                <span className="mobile-drawer-theme-label">Tema</span>
+                <div className="theme-pill" aria-label="Apariencia">
+                  <button type="button" aria-label="Modo claro" className={tema === "claro" ? "on" : ""} onClick={() => setTema("claro")}><Icon name="sun" size={14} /><span>Claro</span></button>
+                  <button type="button" aria-label="Modo oscuro" className={tema === "oscuro" ? "on" : ""} onClick={() => setTema("oscuro")}><Icon name="moon" size={14} /><span>Oscuro</span></button>
+                </div>
+              </div>
             </div>
+            <div className="mobile-profile-card">
+              <span className="user-avatar" style={{ background: perfil.color }}>{obtenerIniciales(perfil.nombre, perfil.email)}</span>
+              <div>
+                <div className="user-name-row">
+                  <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
+                  <span className="user-course-badge">{/^(CFGS|Mi curso)/i.test(perfil.curso.trim()) ? "Personal" : (perfil.curso.trim() || "Personal")}</span>
+                </div>
+                <small>{perfil.email || "Mi cuenta"}</small>
+              </div>
+            </div>
+            <button type="button" className="mobile-logout" onClick={() => void salir()}><Icon name="logout" />Cerrar sesión</button>
           </div>
-          <button className="mobile-logout" onClick={salir}><Icon name="logout" />Cerrar sesión</button>
         </div>
       </nav>
       {menuMovil && <button className="mobile-menu-backdrop" aria-label="Cerrar menú" onClick={() => setMenuMovil(false)} />}

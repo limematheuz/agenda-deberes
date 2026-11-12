@@ -12,6 +12,7 @@ interface Props {
   onSelectDay: (d: ISODate) => void;
   onToggle: (t: Tarea) => void;
   onDropSubject: (d: ISODate, asignaturaId: string, hora: string | null) => void;
+  onDropScheduleClass?: (d: ISODate, claseId: string, hora: string | null) => void;
   onMoveTask: (id: string, fecha: ISODate, hora: string | null) => void;
   dias?: number;
 }
@@ -80,7 +81,7 @@ function distribuirBloquesDia(bloques: BloqueDia[]): BloquePosicion[] {
   return resultado;
 }
 
-export function WeekView({ inicio, tareas, asignaturas, onSelectDay, onToggle, onDropSubject, onMoveTask, dias = 7 }: Props) {
+export function WeekView({ inicio, tareas, asignaturas, onSelectDay, onToggle, onDropSubject, onDropScheduleClass, onMoveTask, dias = 7 }: Props) {
   const porDia = useMemo(() => agruparPorDia(tareas), [tareas]);
   const hoy = todayISO();
   const [ahora, setAhora] = useState(() => new Date());
@@ -180,7 +181,9 @@ export function WeekView({ inicio, tareas, asignaturas, onSelectDay, onToggle, o
                     setSobre(null);
                     const asignaturaId = e.dataTransfer.getData("application/x-agenda-subject");
                     const tareaId = e.dataTransfer.getData("application/x-agenda-task");
+                    const claseId = e.dataTransfer.getData("application/x-schedule-class");
                     if (asignaturaId) onDropSubject(d, asignaturaId, horaEnPunto(e));
+                    if (claseId && onDropScheduleClass) onDropScheduleClass(d, claseId, horaEnPunto(e));
                     if (tareaId) onMoveTask(tareaId, d, horaEnPunto(e));
                   }}
                 >
