@@ -5,6 +5,53 @@ const USERDATA_DIRTY_KEY = "agenda-userdata-dirty-v1";
 const TAREAS_CACHE_KEY = "agenda-tareas-cache-v1";
 const ASIGNATURAS_CACHE_KEY = "agenda-asignaturas-cache-v1";
 const FALLBACK_DESC_KEY = "agenda-descripciones-fallback";
+const ACTIVE_USER_KEY = "agenda-active-user-id-v1";
+
+const USER_LOCAL_STORAGE_KEYS = [
+  QUEUE_KEY,
+  USERDATA_DIRTY_KEY,
+  TAREAS_CACHE_KEY,
+  ASIGNATURAS_CACHE_KEY,
+  FALLBACK_DESC_KEY,
+  "agenda-cloud-state-cache",
+  "agenda-perfil-usuario",
+  "agenda-categorias-asignaturas",
+  "agenda-categorias-asignaturas-mapa",
+  "agenda-horario-semanal",
+  "agenda-mostrar-clases-calendario",
+  "agenda-recordatorios-lista",
+  "agenda-bloc-notas",
+];
+
+export function clearAllLocalSessionCaches(): void {
+  try {
+    for (const key of USER_LOCAL_STORAGE_KEYS) {
+      localStorage.removeItem(key);
+    }
+    localStorage.removeItem(ACTIVE_USER_KEY);
+  } catch {
+    /* ignore */
+  }
+  lastSyncError = null;
+  notifyListeners();
+}
+
+export function ensureActiveUserScope(userId: string): boolean {
+  try {
+    const prev = localStorage.getItem(ACTIVE_USER_KEY);
+    if (prev && prev !== userId) {
+      clearAllLocalSessionCaches();
+      localStorage.setItem(ACTIVE_USER_KEY, userId);
+      return true; // Hubo cambio de cuenta
+    }
+    if (!prev) {
+      localStorage.setItem(ACTIVE_USER_KEY, userId);
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
 
 export const SYNC_COMPLETED_EVENT = "calendarappio-sync-completed";
 

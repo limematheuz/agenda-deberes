@@ -254,10 +254,25 @@ export function CalendarPage() {
   });
   useEffect(() => {
     let cancelado = false;
-    void userData.load().then((remoto) => {
+    void Promise.all([auth.obtenerEmail(), userData.load()]).then(([emailSesion, remoto]) => {
       if (cancelado) return;
       if (remoto) {
-        if (remoto.perfil) setPerfil((actual) => ({ ...actual, ...remoto.perfil }));
+        if (remoto.perfil) {
+          const emailRemoto = remoto.perfil.email?.trim().toLowerCase() ?? "";
+          const emailActual = emailSesion?.trim().toLowerCase() ?? "";
+          const perteneceAOtraCuenta = Boolean(emailActual && emailRemoto && emailRemoto !== emailActual);
+          if (!perteneceAOtraCuenta) {
+            setPerfil((actual) => ({
+              ...actual,
+              ...remoto.perfil,
+              email: emailSesion || actual.email || remoto.perfil?.email || "",
+            }));
+          } else if (emailSesion) {
+            setPerfil((actual) => ({ ...actual, email: emailSesion }));
+          }
+        } else if (emailSesion) {
+          setPerfil((actual) => ({ ...actual, email: emailSesion }));
+        }
         if (remoto.categorias && remoto.categorias.length > 0) setCategorias(remoto.categorias);
         if (remoto.categoriaPorAsignatura) setCategoriaPorAsignatura(remoto.categoriaPorAsignatura);
         if (remoto.clasesSemanales && remoto.clasesSemanales.length > 0) {

@@ -1,25 +1,51 @@
 import type { AgendaCloudState, UserDataGateway } from "../../domain/ports";
 import { supabase } from "./client";
-import { isUserDataDirty, markUserDataDirty, registerSyncExecutors } from "../offline/syncManager";
+import { ensureActiveUserScope, isUserDataDirty, markUserDataDirty, registerSyncExecutors } from "../offline/syncManager";
 
-const LOCAL_CACHE_KEY = "agenda-cloud-state-cache";
+const LOCAL_CACHE_PREFIX = "agenda-cloud-state-cache";
 let acumulado: AgendaCloudState = {};
 let timer: number | null = null;
+let currentUserId: string | null = null;
 
-function leerCacheLocal(): AgendaCloudState | null {
+function cacheKeyFor(userId: string | null): string {
+  return userId ? `${LOCAL_CACHE_PREFIX}-${userId}` : LOCAL_CACHE_PREFIX;
+}
+
+export function resetUserDataMemoryCache(): void {
+  if (timer !== null) {
+    window.clearTimeout(timer);
+    timer = null;
+  }
+  acumulado = {};
+  currentUserId = null;
+}
+
+function leerCacheLocal(userId: string | null): AgendaCloudState | null {
   try {
-    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+    const raw = localStorage.getItem(cacheKeyFor(userId));
     return raw ? (JSON.parse(raw) as AgendaCloudState) : null;
   } catch {
     return null;
   }
 }
 
-function guardarCacheLocal(estado: AgendaCloudState): void {
+function guardarCacheLocal(userId: string | null, estado: AgendaCloudState): void {
   try {
-    localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(estado));
+    localStorage.setItem(cacheKeyFor(userId), JSON.stringify(estado));
   } catch {
     // Ignorar errores de cuota local
+  }
+}
+
+async function obtenerUsuarioIdActual(): Promise<string | null> {
+  if (currentUserId) return currentUserId;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const id = data.session?.user?.id ?? null;
+    if (id) currentUserId = id;
+    return id;
+  } catch {
+    return null;
   }
 }
 
@@ -80,7 +106,8 @@ async function sincronizarEnSupabase(estado: AgendaCloudState): Promise<boolean>
 
 registerSyncExecutors({
   syncUserDataRemote: async () => {
-    const cache = leerCacheLocal();
+    const uid = await obtenerUsuarioIdActual();
+    const cache = leerCacheLocal(uid);
     if (!cache) return true;
     return sincronizarEnSupabase(cache);
   },
@@ -88,9 +115,20 @@ registerSyncExecutors({
 
 export const supabaseUserDataGateway: UserDataGateway = {
   async load(): Promise<AgendaCloudState | null> {
-    const local = leerCacheLocal();
+    const uid = await obtenerUsuarioIdActual();
+    if (uid) {
+      const cambioCuenta = ensureActiveUserScope(uid);
+      if (cambioCuenta) {
+        resetUserDataMemoryCache();
+        currentUserId = uid;
+      }
+    }
+
+    const local = leerCacheLocal(uid);
     if (local) {
       acumulado = { ...local };
+    } else {
+      acumulado = {};
     }
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -101,6 +139,9 @@ export const supabaseUserDataGateway: UserDataGateway = {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       if (!user) return local;
+
+      currentUserId = user.id;
+      ensureActiveUserScope(user.id);
 
       let desdeTabla: AgendaCloudState | null = null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,33 +175,34 @@ export const supabaseUserDataGateway: UserDataGateway = {
         remoto = tMeta > tTabla ? metaSync : desdeTabla;
       }
 
-      // Si hay cambios locales pendientes de subir, priorizar lo local sobre el remoto antiguo
+      // Si hay cambios locales pendientes de subir para ESTE usuario, priorizar lo local sobre el remoto antiguo
       if (isUserDataDirty() && local) {
         acumulado = { ...remoto, ...local };
-        guardarCacheLocal(acumulado);
+        guardarCacheLocal(user.id, acumulado);
         void sincronizarEnSupabase(acumulado);
         return acumulado;
       }
 
       if (remoto) {
         acumulado = { ...local, ...remoto };
-        guardarCacheLocal(acumulado);
+        guardarCacheLocal(user.id, acumulado);
         return acumulado;
       }
     } catch {
-      // Si no hay red, usamos la copia local
+      // Si no hay red, usamos la copia local de este usuario
     }
 
     return local;
   },
 
   async save(parcial: Partial<AgendaCloudState>): Promise<void> {
+    const uid = await obtenerUsuarioIdActual();
     acumulado = {
       ...acumulado,
       ...parcial,
       updatedAt: new Date().toISOString(),
     };
-    guardarCacheLocal(acumulado);
+    guardarCacheLocal(uid, acumulado);
     markUserDataDirty(true);
 
     if (timer !== null) {
