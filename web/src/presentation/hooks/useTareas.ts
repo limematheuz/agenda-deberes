@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { NuevaTarea, Tarea, TareaEditable } from "../../domain/entities";
+import { SYNC_COMPLETED_EVENT } from "../../infrastructure/offline/syncManager";
 import { useServices } from "../ServicesContext";
 
 export function useTareas() {
@@ -13,6 +14,14 @@ export function useTareas() {
   }, []);
 
   useEffect(() => { void run(async () => setTareas(await repo.list())); }, [repo, run]);
+
+  useEffect(() => {
+    const onSynced = () => {
+      void run(async () => setTareas(await repo.list()));
+    };
+    window.addEventListener(SYNC_COMPLETED_EVENT, onSynced);
+    return () => window.removeEventListener(SYNC_COMPLETED_EVENT, onSynced);
+  }, [repo, run]);
 
   return {
     tareas,

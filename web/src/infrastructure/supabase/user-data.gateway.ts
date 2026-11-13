@@ -1,5 +1,6 @@
 import type { AgendaCloudState, UserDataGateway } from "../../domain/ports";
 import { supabase } from "./client";
+import { isUserDataDirty, markUserDataDirty, registerSyncExecutors } from "../offline/syncManager";
 
 const LOCAL_CACHE_KEY = "agenda-cloud-state-cache";
 let acumulado: AgendaCloudState = {};
@@ -22,52 +23,78 @@ function guardarCacheLocal(estado: AgendaCloudState): void {
   }
 }
 
-async function sincronizarEnSupabase(estado: AgendaCloudState): Promise<void> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData.session?.user;
-  if (!user) return;
+async function sincronizarEnSupabase(estado: AgendaCloudState): Promise<boolean> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return false;
 
-  const ahora = new Date().toISOString();
-  const payload: AgendaCloudState = { ...estado, updatedAt: ahora };
-
-  // 1. Intentar guardar en la tabla dedicada public.agenda_preferencias (migración 0007)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clientAny = supabase as any;
   try {
-    await clientAny.from("agenda_preferencias").upsert(
-      {
-        user_id: user.id,
-        perfil: payload.perfil ?? {},
-        categorias: payload.categorias ?? [],
-        categoria_mapa: payload.categoriaPorAsignatura ?? {},
-        clases_semanales: payload.clasesSemanales ?? [],
-        mostrar_clases: payload.mostrarClasesEnCalendario ?? true,
-        recordatorios: payload.recordatorios ?? [],
-        notas_bloc: payload.notasBloc ?? [],
-        colores_bloc: payload.coloresBloc ?? [],
-        updated_at: ahora,
-      },
-      { onConflict: "user_id" }
-    );
-  } catch {
-    // Si la migración 0007 aún no se ejecutó, el respaldo en user_metadata garantiza persistencia en BBDD
-  }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) return false;
 
-  // 2. Guardar también en auth.users (user_metadata en PostgreSQL de Supabase), que funciona siempre entre dispositivos sin requerir migración manual previa
-  try {
-    await supabase.auth.updateUser({
-      data: { agenda_cloud_sync: payload },
-    });
+    const ahora = new Date().toISOString();
+    const payload: AgendaCloudState = { ...estado, updatedAt: ahora };
+    let guardadoEnNube = false;
+
+    // 1. Intentar guardar en la tabla dedicada public.agenda_preferencias (migración 0007)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientAny = supabase as any;
+    try {
+      const { error } = await clientAny.from("agenda_preferencias").upsert(
+        {
+          user_id: user.id,
+          perfil: payload.perfil ?? {},
+          categorias: payload.categorias ?? [],
+          categoria_mapa: payload.categoriaPorAsignatura ?? {},
+          clases_semanales: payload.clasesSemanales ?? [],
+          mostrar_clases: payload.mostrarClasesEnCalendario ?? true,
+          recordatorios: payload.recordatorios ?? [],
+          notas_bloc: payload.notasBloc ?? [],
+          colores_bloc: payload.coloresBloc ?? [],
+          updated_at: ahora,
+        },
+        { onConflict: "user_id" },
+      );
+      if (!error) guardadoEnNube = true;
+    } catch {
+      // Si la migración 0007 aún no se ejecutó, el respaldo en user_metadata garantiza persistencia en BBDD
+    }
+
+    // 2. Guardar también en auth.users (user_metadata en PostgreSQL de Supabase)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { agenda_cloud_sync: payload },
+      });
+      if (!error) guardadoEnNube = true;
+    } catch {
+      // Ignorar fallos de red puntuales; queda en caché local
+    }
+
+    if (guardadoEnNube) {
+      markUserDataDirty(false);
+    }
+    return guardadoEnNube;
   } catch {
-    // Ignorar fallos de red puntuales; queda en caché local
+    return false;
   }
 }
+
+registerSyncExecutors({
+  syncUserDataRemote: async () => {
+    const cache = leerCacheLocal();
+    if (!cache) return true;
+    return sincronizarEnSupabase(cache);
+  },
+});
 
 export const supabaseUserDataGateway: UserDataGateway = {
   async load(): Promise<AgendaCloudState | null> {
     const local = leerCacheLocal();
-    if ( local ) {
+    if (local) {
       acumulado = { ...local };
+    }
+
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return local;
     }
 
     try {
@@ -107,6 +134,14 @@ export const supabaseUserDataGateway: UserDataGateway = {
         remoto = tMeta > tTabla ? metaSync : desdeTabla;
       }
 
+      // Si hay cambios locales pendientes de subir, priorizar lo local sobre el remoto antiguo
+      if (isUserDataDirty() && local) {
+        acumulado = { ...remoto, ...local };
+        guardarCacheLocal(acumulado);
+        void sincronizarEnSupabase(acumulado);
+        return acumulado;
+      }
+
       if (remoto) {
         acumulado = { ...local, ...remoto };
         guardarCacheLocal(acumulado);
@@ -126,6 +161,7 @@ export const supabaseUserDataGateway: UserDataGateway = {
       updatedAt: new Date().toISOString(),
     };
     guardarCacheLocal(acumulado);
+    markUserDataDirty(true);
 
     if (timer !== null) {
       window.clearTimeout(timer);

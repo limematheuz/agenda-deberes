@@ -12,6 +12,7 @@ export function NotificationPanel({
   recordatorios = [],
   estado,
   onActivate,
+  onTest,
   onSelect,
   onSelectRecordatorio,
 }: {
@@ -19,6 +20,7 @@ export function NotificationPanel({
   recordatorios?: readonly Recordatorio[];
   estado: EstadoPush;
   onActivate: () => void;
+  onTest?: () => void;
   onSelect: (t: Tarea) => void;
   onSelectRecordatorio?: () => void;
 }) {
@@ -55,7 +57,21 @@ export function NotificationPanel({
           <section className="notifications-panel">
             <header>
               <strong>Centro de avisos ({totalAhora} hoy · {totalSemana} semana)</strong>
-              {estado !== "activo" && <button onClick={onActivate}><Icon name="bell" size={14} />Activar avisos</button>}
+              {estado === "activo" ? (
+                onTest && (
+                  <button type="button" onClick={onTest} title="Enviar una notificación de prueba a este dispositivo">
+                    <Icon name="bell" size={14} />Probar aviso
+                  </button>
+                )
+              ) : estado === "bloqueado" ? (
+                <button type="button" onClick={onActivate} title="Permiso bloqueado en el navegador o sistema">
+                  <Icon name="bell" size={14} />Permiso bloqueado
+                </button>
+              ) : (
+                <button type="button" onClick={onActivate}>
+                  <Icon name="bell" size={14} />Activar avisos
+                </button>
+              )}
             </header>
             <div className="notification-tabs">
               {(Object.keys(labels) as Array<keyof typeof labels>).map((key) => (

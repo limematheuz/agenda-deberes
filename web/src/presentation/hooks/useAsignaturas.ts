@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Asignatura, NuevaAsignatura } from "../../domain/entities";
+import { SYNC_COMPLETED_EVENT } from "../../infrastructure/offline/syncManager";
 import { useServices } from "../ServicesContext";
 
 export function useAsignaturas() {
@@ -13,6 +14,14 @@ export function useAsignaturas() {
   }, []);
 
   useEffect(() => { void run(async () => setAsignaturas(await repo.list())); }, [repo, run]);
+
+  useEffect(() => {
+    const onSynced = () => {
+      void run(async () => setAsignaturas(await repo.list()));
+    };
+    window.addEventListener(SYNC_COMPLETED_EVENT, onSynced);
+    return () => window.removeEventListener(SYNC_COMPLETED_EVENT, onSynced);
+  }, [repo, run]);
 
   return {
     asignaturas,

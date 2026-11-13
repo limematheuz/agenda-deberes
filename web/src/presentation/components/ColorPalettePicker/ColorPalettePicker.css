@@ -1,7 +1,7 @@
 .color-palette-picker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   flex-wrap: wrap;
 }
 .color-palette-picker.compact {
@@ -15,6 +15,7 @@
   padding: 0;
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
 }
 .color-palette-picker.compact .palette-swatch {
   width: 20px;
@@ -25,9 +26,52 @@
 }
 .palette-swatch.selected {
   border-color: var(--g900);
-  transform: scale(1.12);
+  transform: scale(1.14);
   box-shadow: 0 0 0 2px #ffffff inset;
 }
+
+/* Contenedor relativo para swatches personalizados con botón borrar */
+.palette-custom-swatch-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.palette-swatch-delete {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #18181b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+  transition: opacity 0.12s ease, transform 0.12s ease, background 0.12s ease;
+  z-index: 3;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+}
+.palette-custom-swatch-wrap:hover .palette-swatch-delete,
+.palette-custom-swatch-wrap:focus-within .palette-swatch-delete,
+.palette-custom-swatch-wrap .palette-swatch.selected + .palette-swatch-delete {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+.palette-swatch-delete:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Botón de añadir color con selector nativo */
 .palette-add-swatch {
   position: relative;
   width: 22px;
@@ -64,6 +108,31 @@
   padding: 0;
   border: 0;
 }
+
+/* Botón de limpiar personalizados */
+.palette-clear-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px dashed var(--g300);
+  background: rgba(16, 24, 40, 0.04);
+  color: var(--g600);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  margin-left: 2px;
+}
+.palette-clear-all-btn:hover {
+  border-color: #ef4444;
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+/* Modo oscuro */
 :root[data-theme="oscuro"] .palette-swatch {
   border-color: rgba(255, 255, 255, 0.25);
 }
@@ -75,4 +144,22 @@
   border-color: rgba(255, 255, 255, 0.45);
   background: rgba(255, 255, 255, 0.08);
   color: #f4f4f6;
+}
+:root[data-theme="oscuro"] .palette-swatch-delete {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+:root[data-theme="oscuro"] .palette-swatch-delete:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+:root[data-theme="oscuro"] .palette-clear-all-btn {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: #a1a1aa;
+}
+:root[data-theme="oscuro"] .palette-clear-all-btn:hover {
+  border-color: #f87171;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
 }

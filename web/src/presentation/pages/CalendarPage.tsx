@@ -20,7 +20,9 @@ import { WeeklySchedule } from "../components/WeeklySchedule/WeeklySchedule";
 import { useAsignaturas } from "../hooks/useAsignaturas";
 import { useCalendarView } from "../hooks/useCalendarView";
 import { usePush } from "../hooks/usePush";
+import { useSyncStatus } from "../hooks/useSyncStatus";
 import { useTareas } from "../hooks/useTareas";
+import { evaluarYNotificarPendientes, mostrarNotificacionDispositivo } from "../../infrastructure/push/local-notifier";
 import { useTaskFilters } from "../hooks/useTaskFilters";
 import { useUrgencyBadge } from "../hooks/useUrgencyBadge";
 import { useServices } from "../ServicesContext";
@@ -86,7 +88,30 @@ export function CalendarPage() {
   const tareasApi = useTareas();
   const asigApi = useAsignaturas();
   const push = usePush();
+  const syncState = useSyncStatus();
   const cal = useCalendarView();
+
+  const syncLabelDesktop =
+    syncState.status === "syncing"
+      ? "Sincronizando..."
+      : syncState.status === "offline"
+        ? syncState.pendingCount > 0
+          ? `Sin conexión (${syncState.pendingCount} pend.)`
+          : "Sin conexión · Local"
+        : syncState.status === "pending" || syncState.status === "error"
+          ? `${syncState.pendingCount} pend. · Reintentar`
+          : "Sincronizado";
+
+  const syncLabelMobile =
+    syncState.status === "syncing"
+      ? "Sincronizando cambios..."
+      : syncState.status === "offline"
+        ? syncState.pendingCount > 0
+          ? `Sin conexión (${syncState.pendingCount} pendientes en el dispositivo)`
+          : "Sin conexión (guardado localmente)"
+        : syncState.status === "pending" || syncState.status === "error"
+          ? `${syncState.pendingCount} pendientes · Toca para sincronizar`
+          : "Sincronizado automáticamente";
   const mapa = useMemo(() => new Map(asigApi.asignaturas.map((a) => [a.id, a] as const)), [asigApi.asignaturas]);
   const filtros = useTaskFilters(tareasApi.tareas, mapa);
   const [dia, setDia] = useState<ISODate | null>(null);
@@ -336,6 +361,29 @@ export function CalendarPage() {
   };
   const error = tareasApi.error ?? asigApi.error ?? push.error;
   useEffect(() => { if (error) setToast({ mensaje: error, tipo: "error" }); }, [error]);
+
+  useEffect(() => {
+    if (push.estado !== "activo") return;
+    void evaluarYNotificarPendientes(tareasApi.tareas, recordatorios);
+    const id = window.setInterval(() => {
+      void evaluarYNotificarPendientes(tareasApi.tareas, recordatorios);
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [push.estado, tareasApi.tareas, recordatorios]);
+
+  const probarAvisoDispositivo = async (): Promise<void> => {
+    const ok = await mostrarNotificacionDispositivo(
+      "CalendarAppio · Prueba de aviso",
+      "Las notificaciones del dispositivo están funcionando correctamente.",
+      "calendarappio-test",
+    );
+    setToast({
+      mensaje: ok
+        ? "Notificación enviada al dispositivo."
+        : "No se pudo mostrar el aviso. Revisa los permisos del sistema (macOS / Android).",
+      tipo: ok ? "exito" : "error",
+    });
+  };
   const abrirDia = (fecha: ISODate, asignaturaId: string | null = null): void => { setAsignaturaInicial(asignaturaId); setDia(fecha); };
   const moverTarea = (id: string, fecha: ISODate, hora?: string | null): void => {
     const tarea = tareasApi.tareas.find((actual) => actual.id === id);
@@ -498,10 +546,21 @@ export function CalendarPage() {
             <span className="desktop-crumb">CalendarAppio</span>
             <span className="desktop-crumb"><Icon name="chevron-right" size={14} /></span>
             <b className="desktop-crumb">{etiquetaSeccion}</b>
-            <span className="synced-compact" title="Tus datos se guardan y sincronizan automáticamente en tu cuenta">
-              <i className="synced-dot" />
-              <span className="synced-label">Sincronizado</span>
-            </span>
+            <button
+              type="button"
+              className={`synced-compact status-${syncState.status}`}
+              onClick={syncState.syncNow}
+              title={
+                syncState.status === "offline"
+                  ? "Sin internet: tus cambios se guardan en este dispositivo y se subirán automáticamente al reconectar"
+                  : syncState.pendingCount > 0
+                    ? "Pulsa para sincronizar ahora los cambios pendientes"
+                    : "Tus datos se guardan y sincronizan automáticamente en tu cuenta"
+              }
+            >
+              <i className={`synced-dot status-${syncState.status}`} />
+              <span className="synced-label">{syncLabelDesktop}</span>
+            </button>
           </div>
           <div className="mobile-brand">
             <span className="logo"><img src="/brand/calendarappio-logo.svg?v=3" alt="CalendarAppio" /></span>
@@ -522,6 +581,7 @@ export function CalendarPage() {
               recordatorios={recordatorios}
               estado={push.estado}
               onActivate={() => void push.activar()}
+              onTest={() => void probarAvisoDispositivo()}
               onSelect={(t) => { cal.setAncla(t.fecha); abrirDia(t.fecha); }}
               onSelectRecordatorio={() => setSeccion("recordatorios")}
             />
@@ -962,10 +1022,15 @@ export function CalendarPage() {
 
           <div className="mobile-menu-bottom">
             <div className="mobile-drawer-extra">
-              <div className="mobile-drawer-sync-row">
-                <i className="synced-dot" />
-                <span>Sincronizado automáticamente</span>
-              </div>
+              <button
+                type="button"
+                className={`mobile-drawer-sync-row status-${syncState.status}`}
+                onClick={syncState.syncNow}
+                style={{ width: "100%", textAlign: "left" }}
+              >
+                <i className={`synced-dot status-${syncState.status}`} />
+                <span>{syncLabelMobile}</span>
+              </button>
               <div className="mobile-drawer-theme-row">
                 <span className="mobile-drawer-theme-label">Tema</span>
                 <div className="theme-pill" aria-label="Apariencia">

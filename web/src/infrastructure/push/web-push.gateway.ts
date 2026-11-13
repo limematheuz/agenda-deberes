@@ -1,11 +1,12 @@
 import { supabase } from "../supabase/client";
-
 import type { EstadoPush, PushGateway } from "../../domain/ports";
+import { mostrarNotificacionDispositivo } from "./local-notifier";
 
 const VAPID_PUBLICA = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 const vapidValida = (): boolean => /^[A-Za-z0-9_-]{80,}$/.test(VAPID_PUBLICA ?? "");
 
-const soportado = (): boolean =>
+const soportadoLocal = (): boolean => "Notification" in window;
+const soportadoPushRemoto = (): boolean =>
   "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && vapidValida();
 
 function base64UrlABytes(s: string): Uint8Array<ArrayBuffer> {
@@ -20,10 +21,21 @@ export function registrarServiceWorker(): void {
 }
 
 export async function estadoPush(): Promise<EstadoPush> {
-  if (!soportado()) return "no-soportado";
+  if (!soportadoLocal()) return "no-soportado";
   if (Notification.permission === "denied") return "bloqueado";
-  const reg = await navigator.serviceWorker.ready;
-  return (await reg.pushManager.getSubscription()) ? "activo" : "inactivo";
+  if (Notification.permission === "granted") {
+    if (soportadoPushRemoto()) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) return "activo";
+      } catch {
+        // Sin red o sin pushManager activo; sigue habiendo permiso local
+      }
+    }
+    return "activo";
+  }
+  return "inactivo";
 }
 
 async function guardarSuscripcionUsuario(userId: string, sub: PushSubscription): Promise<boolean> {
@@ -53,39 +65,55 @@ async function guardarSuscripcionUsuario(userId: string, sub: PushSubscription):
   return !error;
 }
 
-/** Pide permiso, suscribe este dispositivo y guarda la suscripción en la BD sin colisionar entre cuentas. */
+/** Pide permiso, muestra confirmación nativa en el dispositivo y registra Web Push en la BD. */
 export async function activarPush(): Promise<EstadoPush> {
-  if (!soportado()) return "no-soportado";
-  if ((await Notification.requestPermission()) !== "granted") return estadoPush();
+  if (!soportadoLocal()) return "no-soportado";
+  const yaTeniaPermiso = Notification.permission === "granted";
+  const permiso = await Notification.requestPermission();
+  if (permiso !== "granted") return estadoPush();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
-  if (!userId) return "inactivo";
-
-  const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
-  if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
-    });
+  // Confirmación inmediata en el centro de notificaciones del dispositivo (Mac / Android) la primera vez
+  if (!yaTeniaPermiso) {
+    void mostrarNotificacionDispositivo(
+      "CalendarAppio · Avisos activados",
+      "Recibirás alertas en este dispositivo para tus tareas y recordatorios.",
+      "calendarappio-welcome",
+    );
   }
 
-  const guardado = await guardarSuscripcionUsuario(userId, sub);
-  if (!guardado) {
-    // Si el endpoint pertenecía a otra sesión previa en este navegador, renovamos la suscripción Push
-    // para obtener un endpoint nuevo exclusivo del usuario actual y evitar bloqueo de RLS.
+  if (soportadoPushRemoto() && (typeof navigator === "undefined" || navigator.onLine)) {
     try {
-      await sub.unsubscribe();
-      const nuevaSub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
-      });
-      await guardarSuscripcionUsuario(userId, nuevaSub);
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
+          });
+        }
+
+        const guardado = await guardarSuscripcionUsuario(userId, sub);
+        if (!guardado) {
+          try {
+            await sub.unsubscribe();
+            const nuevaSub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: base64UrlABytes(VAPID_PUBLICA),
+            });
+            await guardarSuscripcionUsuario(userId, nuevaSub);
+          } catch {
+            // Mantenemos el estado activo local del navegador
+          }
+        }
+      }
     } catch {
-      // Mantenemos el estado activo local del navegador sin lanzar error de RLS al usuario.
+      // Si falla la suscripción remota (ej. offline), el permiso local ya queda activo
     }
   }
+
   return "activo";
 }
 

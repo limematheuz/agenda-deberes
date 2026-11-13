@@ -1,10 +1,106 @@
-// Service worker mínimo: recibe avisos push y los muestra como notificaciones del sistema.
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+// Service worker de CalendarAppio: caché offline para abrir la PWA sin red + notificaciones push.
+const CACHE_NAME = "calendarappio-shell-v2";
+const CORE_ASSETS = [
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/brand/calendarappio-logo.svg",
+  "/brand/calendarappio-logo.svg?v=3",
+  "/icon-192.png",
+  "/icon-192.png?v=3",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/apple-touch-icon.png?v=3",
+  "/favicon.png",
+  "/favicon.png?v=3",
+];
 
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS).catch(() => undefined))
+      .then(() => self.skipWaiting()),
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k.startsWith("calendarappio-") && k !== CACHE_NAME)
+            .map((k) => caches.delete(k)),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+  if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+  // No cachear peticiones a Supabase ni APIs dinámicas; las gestiona la cola offline de la app
+  if (url.hostname.endsWith("supabase.co") || url.pathname.startsWith("/rest/") || url.pathname.startsWith("/auth/")) {
+    return;
+  }
+
+  // Navegación (HTML principal): Network-first con fallback a caché para abrir la PWA offline
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            void caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          }
+          return res;
+        })
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          return (await cache.match(req)) || (await cache.match("/")) || (await cache.match("/index.html"));
+        }),
+    );
+    return;
+  }
+
+  // Assets estáticos del mismo origen o Google Fonts: Stale-While-Revalidate
+  const esMismoOrigen = url.origin === self.location.origin;
+  const esFuente = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
+
+  if (esMismoOrigen || esFuente) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(req);
+        const networkPromise = fetch(req)
+          .then((res) => {
+            if (res && (res.ok || res.type === "opaque")) {
+              void cache.put(req, res.clone());
+            }
+            return res;
+          })
+          .catch(() => cached);
+
+        return cached || networkPromise;
+      }),
+    );
+  }
+});
+
+// Notificaciones push
 self.addEventListener("push", (event) => {
   let d = {};
-  try { d = event.data ? event.data.json() : {}; } catch { /* payload no JSON */ }
+  try {
+    d = event.data ? event.data.json() : {};
+  } catch {
+    /* payload no JSON */
+  }
   event.waitUntil(
     self.registration.showNotification(d.title || "CalendarAppio", {
       body: d.body || "",
