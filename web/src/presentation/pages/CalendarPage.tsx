@@ -371,6 +371,23 @@ export function CalendarPage() {
     return () => window.clearInterval(id);
   }, [push.estado, tareasApi.tareas, recordatorios]);
 
+  const solicitarPermisoAvisos = async (): Promise<void> => {
+    const resultado = await push.activar();
+    if (resultado === "activo") {
+      setToast({ mensaje: "Notificaciones activadas en este dispositivo.", tipo: "exito" });
+    } else if (resultado === "bloqueado") {
+      setToast({
+        mensaje: "Permiso bloqueado: actívalo en el candado del navegador o en Ajustes del Sistema → Notificaciones.",
+        tipo: "error",
+      });
+    } else if (resultado === "no-soportado") {
+      setToast({
+        mensaje: "Tu navegador actual no soporta notificaciones aquí.",
+        tipo: "error",
+      });
+    }
+  };
+
   const probarAvisoDispositivo = async (): Promise<void> => {
     const ok = await mostrarNotificacionDispositivo(
       "CalendarAppio · Prueba de aviso",
@@ -567,6 +584,21 @@ export function CalendarPage() {
             <span className="mobile-brand-name">CalendarAppio</span>
           </div>
           <div className="header-right-actions">
+            {(push.estado === "inactivo" || push.estado === "bloqueado") && (
+              <button
+                type="button"
+                className="push-cta"
+                onClick={() => void solicitarPermisoAvisos()}
+                title={
+                  push.estado === "bloqueado"
+                    ? "Notificaciones bloqueadas: revisa los permisos del navegador"
+                    : "Permitir notificaciones en este dispositivo"
+                }
+              >
+                <Icon name="bell" size={14} />
+                <span>{push.estado === "bloqueado" ? "Desbloquear avisos" : "Activar avisos"}</span>
+              </button>
+            )}
             <button
               type="button"
               className="share-header-btn"
@@ -580,7 +612,7 @@ export function CalendarPage() {
               tareas={tareasApi.tareas}
               recordatorios={recordatorios}
               estado={push.estado}
-              onActivate={() => void push.activar()}
+              onActivate={() => void solicitarPermisoAvisos()}
               onTest={() => void probarAvisoDispositivo()}
               onSelect={(t) => { cal.setAncla(t.fecha); abrirDia(t.fecha); }}
               onSelectRecordatorio={() => setSeccion("recordatorios")}

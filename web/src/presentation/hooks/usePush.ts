@@ -17,8 +17,16 @@ export function usePush() {
       .catch(() => undefined);
   }, [push]);
 
-  const activar = async (): Promise<void> => {
-    try { setError(null); setEstado(await push.activar()); } catch (e) { fallo(e); }
+  const activar = async (): Promise<EstadoPush> => {
+    try {
+      setError(null);
+      const siguiente = await push.activar();
+      setEstado(siguiente);
+      return siguiente;
+    } catch (e) {
+      fallo(e);
+      return estado;
+    }
   };
   return { estado, error, activar };
 }
