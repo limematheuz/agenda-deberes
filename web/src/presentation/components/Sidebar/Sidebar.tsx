@@ -16,7 +16,7 @@ export interface UserProfile {
 export type SeccionApp = "resumen" | "calendario" | "horario" | "recordatorios" | "notas";
 
 export function obtenerIniciales(nombre: string, email: string): string {
-  const base = (nombre.trim() || email.split("@")[0] || "U").trim();
+  const base = (nombre.trim() || email.trim() || "U").trim();
   const partes = base.split(/[\s._-]+/).filter(Boolean);
   if (partes.length >= 2) return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
   return base.slice(0, 2).toUpperCase();
@@ -94,7 +94,7 @@ export function Sidebar({
 
   const pendientes = tareas.filter((t) => !t.hecha);
   const categoriaParaBorrar = categorias.find((categoria) => categoria.id === categoriaABorrar);
-  const nombreVisible = perfil.nombre.trim() || perfil.email.split("@")[0] || "Usuario";
+  const nombreVisible = perfil.nombre.trim() || perfil.email.trim() || "Usuario";
   const etiquetaCursoLimpia = /^(CFGS|Mi curso)/i.test(perfil.curso.trim()) ? "Personal" : perfil.curso.trim();
   const cursoBadge = etiquetaCursoLimpia || "Personal";
   const iniciales = obtenerIniciales(perfil.nombre, perfil.email);
@@ -456,7 +456,11 @@ export function Sidebar({
           className="profile-edit-form"
           onSubmit={(e) => {
             e.preventDefault();
-            onGuardarPerfil({ nombre: nombrePerfil.trim(), curso: cursoPerfil.trim(), color: colorPerfil });
+            onGuardarPerfil({
+              nombre: nombrePerfil.trim() || perfil.email.trim(),
+              curso: cursoPerfil.trim() || "Personal",
+              color: colorPerfil,
+            });
             setEditandoPerfil(false);
           }}
         >

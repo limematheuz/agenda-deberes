@@ -178,7 +178,13 @@ export function CalendarPage() {
 
   useEffect(() => {
     void auth.obtenerEmail().then((email) => {
-      if (email) setPerfil((actual) => ({ ...actual, email }));
+      if (email) {
+        setPerfil((actual) => ({
+          ...actual,
+          email,
+          nombre: actual.nombre.trim() ? actual.nombre : email,
+        }));
+      }
     });
   }, [auth]);
   useEffect(() => {
@@ -262,16 +268,30 @@ export function CalendarPage() {
           const emailActual = emailSesion?.trim().toLowerCase() ?? "";
           const perteneceAOtraCuenta = Boolean(emailActual && emailRemoto && emailRemoto !== emailActual);
           if (!perteneceAOtraCuenta) {
-            setPerfil((actual) => ({
-              ...actual,
-              ...remoto.perfil,
-              email: emailSesion || actual.email || remoto.perfil?.email || "",
-            }));
-          } else if (emailSesion) {
-            setPerfil((actual) => ({ ...actual, email: emailSesion }));
+            setPerfil((actual) => {
+              const emailFinal = emailSesion || actual.email || remoto.perfil?.email || "";
+              const nombreRemoto = remoto.perfil?.nombre?.trim() ?? "";
+              return {
+                ...actual,
+                ...remoto.perfil,
+                email: emailFinal,
+                nombre: nombreRemoto || actual.nombre.trim() || emailFinal,
+              };
+            });
+          } else {
+            setPerfil({
+              nombre: emailSesion ?? "",
+              curso: "Personal",
+              email: emailSesion ?? "",
+              color: "#3b82f6",
+            });
           }
         } else if (emailSesion) {
-          setPerfil((actual) => ({ ...actual, email: emailSesion }));
+          setPerfil((actual) => ({
+            ...actual,
+            email: emailSesion,
+            nombre: actual.nombre.trim() || emailSesion,
+          }));
         }
         if (remoto.categorias && remoto.categorias.length > 0) setCategorias(remoto.categorias);
         if (remoto.categoriaPorAsignatura) setCategoriaPorAsignatura(remoto.categoriaPorAsignatura);
@@ -288,6 +308,12 @@ export function CalendarPage() {
         if (remoto.notasBloc && remoto.notasBloc.length > 0) {
           setNotasBloc(remoto.notasBloc);
         }
+      } else if (emailSesion) {
+        setPerfil((actual) => ({
+          ...actual,
+          email: emailSesion,
+          nombre: actual.nombre.trim() || emailSesion,
+        }));
       }
       setCloudCargado(true);
     });
@@ -647,7 +673,7 @@ export function CalendarPage() {
               <h1>{etiquetaSeccion}</h1>
               {seccion === "resumen" && (
                 <p className="overview-welcome">
-                  Hola, <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "bienvenido"}</strong> · {fechaHoyFormateada}
+                  Hola, <strong>{perfil.nombre.trim() || perfil.email.trim() || "bienvenido"}</strong> · {fechaHoyFormateada}
                 </p>
               )}
             </div>
@@ -1099,7 +1125,7 @@ export function CalendarPage() {
               <span className="user-avatar" style={{ background: perfil.color }}>{obtenerIniciales(perfil.nombre, perfil.email)}</span>
               <div className="mobile-profile-card-info">
                 <div className="user-name-row">
-                  <strong>{perfil.nombre.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
+                  <strong>{perfil.nombre.trim() || perfil.email.trim() || "Usuario"}</strong>
                   <span className="user-course-badge">{/^(CFGS|Mi curso)/i.test(perfil.curso.trim()) ? "Personal" : (perfil.curso.trim() || "Personal")}</span>
                 </div>
                 <small>{perfil.email || "Mi cuenta"}</small>
@@ -1173,8 +1199,8 @@ export function CalendarPage() {
           className="profile-edit-form"
           onSubmit={(e) => {
             e.preventDefault();
-            const n = nombrePerfil.trim();
-            const c = cursoPerfil.trim();
+            const n = nombrePerfil.trim() || perfil.email.trim();
+            const c = cursoPerfil.trim() || "Personal";
             setPerfil((actual) => ({ ...actual, nombre: n, curso: c, color: colorPerfil }));
             setToast({ mensaje: "Perfil actualizado.", tipo: "exito" });
             setEditandoPerfil(false);
@@ -1185,7 +1211,7 @@ export function CalendarPage() {
               {obtenerIniciales(nombrePerfil, perfil.email)}
             </span>
             <div>
-              <strong>{nombrePerfil.trim() || perfil.email.split("@")[0] || "Usuario"}</strong>
+              <strong>{nombrePerfil.trim() || perfil.email.trim() || "Usuario"}</strong>
               <small>{perfil.email || "Mi cuenta"}</small>
             </div>
           </div>
