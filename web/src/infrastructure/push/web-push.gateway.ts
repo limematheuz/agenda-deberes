@@ -69,7 +69,7 @@ async function guardarSuscripcionUsuario(userId: string, sub: PushSubscription):
 export async function activarPush(): Promise<EstadoPush> {
   if (!soportadoLocal()) return "no-soportado";
   const yaTeniaPermiso = Notification.permission === "granted";
-  const permiso = await Notification.requestPermission();
+  const permiso = yaTeniaPermiso ? "granted" : await Notification.requestPermission();
   if (permiso !== "granted") return estadoPush();
 
   // Confirmación inmediata en el centro de notificaciones del dispositivo (Mac / Android) la primera vez

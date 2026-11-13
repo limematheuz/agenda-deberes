@@ -41,10 +41,14 @@ export async function mostrarNotificacionDispositivo(
   if (typeof window === "undefined" || !("Notification" in window)) return false;
   if (Notification.permission !== "granted") return false;
 
+  const base = window.location.origin;
+  const iconUrl = `${base}/notification-icon.png?v=5`;
+  const badgeUrl = `${base}/badge-96.png?v=5`;
+
   const opciones: NotificationOptions & { vibrate?: number[]; renotify?: boolean } = {
     body: cuerpo,
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: iconUrl,
+    badge: badgeUrl,
     tag,
     renotify: true,
     vibrate: [180, 80, 180],
@@ -67,7 +71,7 @@ export async function mostrarNotificacionDispositivo(
   }
 
   try {
-    new Notification(titulo, { body: cuerpo, icon: "/icon-192.png", tag });
+    new Notification(titulo, { body: cuerpo, icon: iconUrl, tag });
     return true;
   } catch {
     return false;

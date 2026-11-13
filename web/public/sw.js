@@ -1,5 +1,5 @@
 // Service worker de CalendarAppio: caché offline para abrir la PWA sin red + notificaciones push.
-const CACHE_NAME = "calendarappio-shell-v2";
+const CACHE_NAME = "calendarappio-shell-v4";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -7,8 +7,15 @@ const CORE_ASSETS = [
   "/brand/calendarappio-logo.svg",
   "/brand/calendarappio-logo.svg?v=3",
   "/icon-192.png",
-  "/icon-192.png?v=3",
+  "/icon-192.png?v=5",
+  "/notification-icon.png",
+  "/notification-icon.png?v=5",
+  "/badge-96.png",
+  "/badge-96.png?v=5",
   "/icon-512.png",
+  "/icon-512.png?v=5",
+  "/icon-512-maskable.png",
+  "/icon-512-maskable.png?v=5",
   "/apple-touch-icon.png",
   "/apple-touch-icon.png?v=3",
   "/favicon.png",
@@ -101,13 +108,15 @@ self.addEventListener("push", (event) => {
   } catch {
     /* payload no JSON */
   }
+  const base = self.location.origin;
   event.waitUntil(
     self.registration.showNotification(d.title || "CalendarAppio", {
       body: d.body || "",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      icon: `${base}/notification-icon.png?v=5`,
+      badge: `${base}/badge-96.png?v=5`,
       tag: d.tag || "calendarappio",
       renotify: true,
+      vibrate: [180, 80, 180],
       data: { url: d.url || "/" },
     }),
   );
