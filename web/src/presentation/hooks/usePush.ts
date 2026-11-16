@@ -9,12 +9,17 @@ export function usePush() {
   const fallo = (e: unknown): void => setError(e instanceof Error ? e.message : "Error desconocido");
 
   useEffect(() => {
-    // Sincronización silenciosa en segundo plano al iniciar sesión.
-    void push
-      .estado()
-      .then((s) => (s === "activo" ? push.activar().catch(() => s) : s))
-      .then(setEstado)
-      .catch(() => undefined);
+    const sincronizar = (): void => {
+      void push
+        .estado()
+        .then((s) => (s === "activo" ? push.activar().catch(() => s) : s))
+        .then(setEstado)
+        .catch(() => undefined);
+    };
+
+    sincronizar();
+    window.addEventListener("online", sincronizar);
+    return () => window.removeEventListener("online", sincronizar);
   }, [push]);
 
   const activar = async (): Promise<EstadoPush> => {

@@ -1,6 +1,6 @@
 // Reglas puras (sin red ni base de datos). Misma escala que web/src/domain/urgency.ts.
-// 4–7 días: aviso naranja una vez · 2–3 días: rojo diario · hoy/mañana: rojo dos veces.
-import { diasHasta } from "./tiempo.ts";
+// 4–7 días: aviso naranja una vez · 2–3 días: rojo diario · hoy/mañana: rojo dos veces · hora exacta: aviso puntual.
+import { diasHasta, parseHoraMinutos } from "./tiempo.ts";
 import type { Candidata, Mensaje, Nivel, Slot, Tarea } from "./types.ts";
 
 const ORDEN: readonly Nivel[] = ["media", "alta", "critica", "hoy", "vencida"];
@@ -17,13 +17,25 @@ export function nivelDe(_tipo: string, dias: number): Nivel | null {
 
 export const claveDe = (nivel: Nivel, hoy: string, slot: Slot): string => (nivel === "media" ? "media" : `${nivel}:${hoy}:${slot}`);
 
-/** Tareas que toca avisar ahora (según su nivel y la franja del día). */
+/** Tareas que toca avisar en el resumen de franja (mañana/tarde). */
 export function candidatas(tareas: readonly Tarea[], hoy: string, slot: Slot): Candidata[] {
   return tareas.flatMap((tarea) => {
     const dias = diasHasta(hoy, tarea.fecha);
     const nivel = nivelDe(tarea.tipo, dias);
     if (!nivel || !SLOTS[nivel].includes(slot)) return [];
     return [{ tarea, dias, nivel, clave: claveDe(nivel, hoy, slot) }];
+  });
+}
+
+/** Tareas de hoy con hora exacta cuya ventana de aviso (30 min antes hasta 5 min después) está activa ahora. */
+export function candidatasPorHora(tareas: readonly Tarea[], hoy: string, ahoraMin: number): Candidata[] {
+  return tareas.flatMap((tarea) => {
+    if (tarea.fecha !== hoy || !tarea.hora) return [];
+    const hMin = parseHoraMinutos(tarea.hora);
+    if (hMin === null) return [];
+    const diff = hMin - ahoraMin;
+    if (diff < -5 || diff > 30) return [];
+    return [{ tarea, dias: 0, nivel: "hoy", clave: `hora:${hoy}:${tarea.hora}` }];
   });
 }
 
@@ -42,6 +54,25 @@ export function resumir(items: readonly Candidata[]): Mensaje {
     title: orden.length === 1 ? "Entrega cerca" : `${orden.length} entregas cerca`,
     body: orden.slice(0, 3).map((i) => `${i.tarea.titulo} (${cuando(i.dias)})`).join("\n"),
     tag: "entregas",
+    url: "/",
+  };
+}
+
+/** Aviso puntual para tareas con hora programada hoy. */
+export function resumirPuntual(items: readonly Candidata[]): Mensaje {
+  if (items.length === 1) {
+    const t = items[0].tarea;
+    return {
+      title: t.titulo,
+      body: `Hoy a las ${t.hora?.slice(0, 5) ?? ""}`,
+      tag: `tarea-${t.id}`,
+      url: "/",
+    };
+  }
+  return {
+    title: `${items.length} tareas próximas`,
+    body: items.slice(0, 3).map((i) => `${i.tarea.titulo} (${i.tarea.hora?.slice(0, 5) ?? "hoy"})`).join("\n"),
+    tag: "tareas-hora",
     url: "/",
   };
 }

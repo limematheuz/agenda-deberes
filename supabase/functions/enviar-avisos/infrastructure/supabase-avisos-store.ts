@@ -11,7 +11,11 @@ export class SupabaseAvisosStore implements AvisosStore {
   constructor(private readonly db: SupabaseClient) {}
 
   async tareasPendientes(hasta: string): Promise<Tarea[]> {
-    const { data, error } = await this.db.from("tareas").select("id,user_id,titulo,tipo,fecha").eq("hecha", false).lte("fecha", hasta);
+    const { data, error } = await this.db
+      .from("tareas")
+      .select("id,user_id,titulo,tipo,fecha,hora")
+      .eq("hecha", false)
+      .lte("fecha", hasta);
     ok(error);
     return (data ?? []) as Tarea[];
   }

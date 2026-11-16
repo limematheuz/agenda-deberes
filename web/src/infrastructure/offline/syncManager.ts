@@ -23,6 +23,14 @@ const USER_LOCAL_STORAGE_KEYS = [
   "agenda-bloc-notas",
 ];
 
+export function getActiveUserId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_USER_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function clearAllLocalSessionCaches(): void {
   try {
     for (const key of USER_LOCAL_STORAGE_KEYS) {

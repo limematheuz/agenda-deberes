@@ -1,11 +1,14 @@
 // Service worker de CalendarAppio: caché offline para abrir la PWA sin red + notificaciones push.
-const CACHE_NAME = "calendarappio-shell-v4";
+const CACHE_NAME = "__CALENDARAPPIO_CACHE_VERSION__";
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/brand/calendarappio-logo.svg",
   "/brand/calendarappio-logo.svg?v=3",
+  "/assets/bg-gradient-light.jpg",
+  "/assets/bg-gradient-dark.jpg",
+  "/assets/noise.svg",
   "/icon-192.png",
   "/icon-192.png?v=5",
   "/notification-icon.png",
@@ -21,12 +24,20 @@ const CORE_ASSETS = [
   "/favicon.png",
   "/favicon.png?v=3",
 ];
+// __BUILD_ASSETS_INJECT__
 
 self.addEventListener("install", (event) => {
+  const activos = Array.from(new Set([...CORE_ASSETS, ...(self.__BUILD_ASSETS || [])]));
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_ASSETS).catch(() => undefined))
+      .then((cache) =>
+        Promise.allSettled(
+          activos.map((url) =>
+            cache.add(new Request(url, { cache: "reload" })).catch(() => undefined),
+          ),
+        ),
+      )
       .then(() => self.skipWaiting()),
   );
 });
@@ -46,6 +57,16 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+async function fetchConTimeout(req, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(req, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -58,26 +79,35 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navegación (HTML principal): Network-first con fallback a caché para abrir la PWA offline
+  // Navegación (HTML principal): Network-first con timeout corto y fallback instantáneo a caché offline
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
+      fetchConTimeout(req, 2500)
         .then((res) => {
           if (res && res.ok) {
-            const copy = res.clone();
-            void caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+            const copy1 = res.clone();
+            const copy2 = res.clone();
+            void caches.open(CACHE_NAME).then((cache) => Promise.all([
+              cache.put("/", copy1),
+              cache.put("/index.html", copy2),
+            ]));
           }
           return res;
         })
         .catch(async () => {
           const cache = await caches.open(CACHE_NAME);
-          return (await cache.match(req)) || (await cache.match("/")) || (await cache.match("/index.html"));
+          return (
+            (await cache.match(req, { ignoreSearch: true })) ||
+            (await cache.match("/")) ||
+            (await cache.match("/index.html")) ||
+            Response.error()
+          );
         }),
     );
     return;
   }
 
-  // Assets estáticos del mismo origen o Google Fonts: Stale-While-Revalidate
+  // Assets estáticos del mismo origen o Google Fonts: Stale-While-Revalidate seguro
   const esMismoOrigen = url.origin === self.location.origin;
   const esFuente = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
 
@@ -92,9 +122,19 @@ self.addEventListener("fetch", (event) => {
             }
             return res;
           })
-          .catch(() => cached);
+          .catch(() => null);
 
-        return cached || networkPromise;
+        if (cached) {
+          void networkPromise;
+          return cached;
+        }
+
+        const red = await networkPromise;
+        if (red) return red;
+        if (esFuente && url.hostname === "fonts.googleapis.com") {
+          return new Response("", { status: 200, headers: { "Content-Type": "text/css" } });
+        }
+        return Response.error();
       }),
     );
   }
@@ -103,10 +143,16 @@ self.addEventListener("fetch", (event) => {
 // Notificaciones push
 self.addEventListener("push", (event) => {
   let d = {};
-  try {
-    d = event.data ? event.data.json() : {};
-  } catch {
-    /* payload no JSON */
+  if (event.data) {
+    try {
+      d = event.data.json();
+    } catch {
+      try {
+        d = { body: event.data.text() };
+      } catch {
+        /* payload vacío */
+      }
+    }
   }
   const base = self.location.origin;
   event.waitUntil(
