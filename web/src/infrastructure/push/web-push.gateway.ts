@@ -128,4 +128,24 @@ export async function activarPush(): Promise<EstadoPush> {
   return "activo";
 }
 
+let ultimoDisparoInmediato = 0;
+
+/**
+ * Envía de inmediato las notificaciones pendientes del usuario a sus demás dispositivos
+ * (p. ej. móvil con la app cerrada) llamando a la Edge Function autenticada con su sesión.
+ */
+export async function dispararPushInmediato(): Promise<void> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  const ahora = Date.now();
+  if (ahora - ultimoDisparoInmediato < 1500) return;
+  ultimoDisparoInmediato = ahora;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    await supabase.functions.invoke("enviar-avisos", { body: { modo: "inmediato" } });
+  } catch {
+    // Si falla (sin red o función no desplegada), no interrumpe la UX local
+  }
+}
+
 export const webPushGateway: PushGateway = { estado: estadoPush, activar: activarPush };

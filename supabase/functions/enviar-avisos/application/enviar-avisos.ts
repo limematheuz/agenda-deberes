@@ -6,7 +6,7 @@ import { agruparPorUsuario, candidatas, candidatasPorHora, resumir, resumirPuntu
 export type ResultadoEnvio = "ok" | "caducada" | "error";
 
 export interface AvisosStore {
-  tareasPendientes(hasta: string): Promise<Tarea[]>;
+  tareasPendientes(hasta: string, userId?: string): Promise<Tarea[]>;
   avisosEnviados(tareaIds: string[]): Promise<Aviso[]>;
   suscripciones(userId: string): Promise<Suscripcion[]>;
   marcarEnviados(avisos: Aviso[]): Promise<void>;
@@ -47,13 +47,18 @@ async function despacharGrupo(
   return { usuarios, avisos };
 }
 
-export async function enviarAvisos(deps: { store: AvisosStore; sender: PushSender; ahora: Date }): Promise<Resultado> {
-  const { store, sender, ahora } = deps;
+export async function enviarAvisos(deps: {
+  store: AvisosStore;
+  sender: PushSender;
+  ahora: Date;
+  userId?: string;
+}): Promise<Resultado> {
+  const { store, sender, ahora, userId } = deps;
   const hoy = fechaMadrid(ahora);
   const slot: Slot = horaMadrid(ahora) < 14 ? "am" : "pm";
   const ahoraMin = minutosMadrid(ahora);
 
-  const pendientes = await store.tareasPendientes(sumarDias(hoy, 9));
+  const pendientes = await store.tareasPendientes(sumarDias(hoy, 9), userId);
   if (!pendientes.length) return { usuarios: 0, avisos: 0 };
 
   const candsPuntuales = candidatasPorHora(pendientes, hoy, ahoraMin);

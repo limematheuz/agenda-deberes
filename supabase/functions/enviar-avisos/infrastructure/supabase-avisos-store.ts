@@ -10,12 +10,14 @@ const ok = (error: { message: string } | null): void => {
 export class SupabaseAvisosStore implements AvisosStore {
   constructor(private readonly db: SupabaseClient) {}
 
-  async tareasPendientes(hasta: string): Promise<Tarea[]> {
-    const { data, error } = await this.db
+  async tareasPendientes(hasta: string, userId?: string): Promise<Tarea[]> {
+    let query = this.db
       .from("tareas")
       .select("id,user_id,titulo,tipo,fecha,hora")
       .eq("hecha", false)
       .lte("fecha", hasta);
+    if (userId) query = query.eq("user_id", userId);
+    const { data, error } = await query;
     ok(error);
     return (data ?? []) as Tarea[];
   }

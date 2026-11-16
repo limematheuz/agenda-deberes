@@ -23,6 +23,7 @@ import { usePush } from "../hooks/usePush";
 import { useSyncStatus } from "../hooks/useSyncStatus";
 import { useTareas } from "../hooks/useTareas";
 import { evaluarYNotificarPendientes, mostrarNotificacionDispositivo } from "../../infrastructure/push/local-notifier";
+import { dispararPushInmediato } from "../../infrastructure/push/web-push.gateway";
 import { useTaskFilters } from "../hooks/useTaskFilters";
 import { useUrgencyBadge } from "../hooks/useUrgencyBadge";
 import { useServices } from "../ServicesContext";
@@ -405,9 +406,13 @@ export function CalendarPage() {
 
   useEffect(() => {
     if (push.estado !== "activo") return;
-    void evaluarYNotificarPendientes(tareasApi.tareas, recordatorios);
+    const evaluar = async (): Promise<void> => {
+      const huboNuevas = await evaluarYNotificarPendientes(tareasApi.tareas, recordatorios);
+      if (huboNuevas) void dispararPushInmediato();
+    };
+    void evaluar();
     const id = window.setInterval(() => {
-      void evaluarYNotificarPendientes(tareasApi.tareas, recordatorios);
+      void evaluar();
     }, 30_000);
     return () => window.clearInterval(id);
   }, [push.estado, tareasApi.tareas, recordatorios]);

@@ -97,9 +97,9 @@ function parseHoraMinutos(hora: string | null): number | null {
 export async function evaluarYNotificarPendientes(
   tareas: readonly Tarea[],
   recordatorios: readonly Recordatorio[],
-): Promise<void> {
-  if (typeof window === "undefined" || !("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
+): Promise<boolean> {
+  if (typeof window === "undefined" || !("Notification" in window)) return false;
+  if (Notification.permission !== "granted") return false;
 
   const hoy = todayISO();
   const notificados = leerNotificadosHoy(hoy);
@@ -118,9 +118,9 @@ export async function evaluarYNotificarPendientes(
     }
   }
 
-  // 2. Tareas urgentes de hoy / vencidas
-  const urgentes = tareas.filter((t) => !t.hecha && urgencyOf(t) === "alta");
-  for (const t of urgentes) {
+  // 2. Tareas que generan aviso por plazos (urgencia alta <= 3 días o media 4-7 días)
+  const conPlazo = tareas.filter((t) => !t.hecha && (urgencyOf(t) === "alta" || urgencyOf(t) === "media"));
+  for (const t of conPlazo) {
     // Aviso general del día (máximo 1 vez al día por tarea urgente)
     const keyDia = `tarea-dia:${t.id}`;
     if (!notificados.has(keyDia)) {
@@ -169,4 +169,5 @@ export async function evaluarYNotificarPendientes(
   if (huboCambios) {
     guardarNotificadosHoy(hoy, notificados);
   }
+  return huboCambios;
 }
